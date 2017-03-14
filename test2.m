@@ -121,7 +121,7 @@ for x=1:quantizedSpace
             ppH=proposalsAcrossVideo(proposalIndex,4);
 
             % check if in proposal
-            if disquantizedX-ppX >=0 && disquantizedX-ppX <=ppW && disquantizedY-ppY >=0 && disquantizedY-ppY <=ppH
+            if abs(disquantizedX-ppX) <= 0.5*ppW && abs(disquantizedY-ppY) <=0.5*ppH
                 occurrenceCount(y,x,clusterResult(proposalIndex))=occurrenceCount(y,x,clusterResult(proposalIndex))+1;     %y,x not x,y
             end
 
@@ -130,41 +130,36 @@ for x=1:quantizedSpace
     disp(x);
 end
 for l=1:clusterNum+1
-    occurrenceCount(:,:,l)=occurrenceCount(:,:,l)/max(max(occurrenceCount(:,:,l)));
+    occurrenceCount(:,:,l)=occurrenceCount(:,:,l)/sum(sum(occurrenceCount(:,:,l)));
 end
 
 
 [~,sortedClusters]=sort(clusterEnergy,'ascend');
 
-unitedPartsMask=zeros(quantizedSpace,quantizedSpace);
-for clusterIndex=1:clusterNum
-    foregroundMask=occurrenceCount(:,:,clusterNum+1)<0.5;
-    unitedPartsMask=or(unitedPartsMask,occurrenceCount(:,:,clusterIndex)>0.5);
-    
-    
-    foregroundMaskArea=bwarea(foregroundMask);
-    overlapArea=bwarea(and(unitedPartsMask,foregroundMask));
-    
-    if(overlapArea>0.75*foregroundMaskArea)
-        break;
-    end
-end
+% unitedPartsMask=zeros(quantizedSpace,quantizedSpace);
+% for clusterIndex=1:clusterNum
+%     foregroundMask=occurrenceCount(:,:,clusterNum+1)<0.5;
+%     unitedPartsMask=or(unitedPartsMask,occurrenceCount(:,:,clusterIndex)>0.5);
+%     
+%     
+%     foregroundMaskArea=bwarea(foregroundMask);
+%     overlapArea=bwarea(and(unitedPartsMask,foregroundMask));
+%     
+%     if(overlapArea>0.75*foregroundMaskArea)
+%         break;
+%     end
+% end
 
-maxClusters=sortedClusters(1:clusterIndex);
-
+maxClusters=sortedClusters(1:partsNum);
+occurrenceCount=occurrenceCount(:,:,[maxClusters;clusterNum+1]);
 
 
 locationProbMap=zeros(quantizedSpace,quantizedSpace,partsNum+1);
 for l=1:partsNum+1
-    occurrenceCount(:,:,l)=occurrenceCount(:,:,l)/max(max(occurrenceCount(:,:,l)));%normalize
-    
-    %occurrenceCount(:,:,l)=occurrenceCount(:,:,l)-0.5*max(max(occurrenceCount(:,:,l)));
-    %occurrenceCount(:,:,l)=(1+exp(-1*occurrenceCount(:,:,l))).^-1; %sigmoid
-%     
+
 %     if l==partsNum+1
 %         occurrenceCount(:,:,l)=occurrenceCount(:,:,l)*backgroundProbFactor;
 %     end
-    
     
     locationProbMap(:,:,l)=occurrenceCount(:,:,l)./sum(occurrenceCount,3);
 end

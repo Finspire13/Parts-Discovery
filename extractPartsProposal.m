@@ -1,6 +1,10 @@
 function [ partsProposal ] = extractPartsProposal( partsProposalMap, foregroundMask )
-%EXTRACTPARTSPROPOSAL Summary of this function goes here
-%   Detailed explanation goes here
+%   Extract part proposals from part proposals map.
+%--Input--
+%   partsProposalMap: Part proposals map.
+%   foregroundMask: Foreground mask.
+%--Output--
+%   partsProposal: Nx4 matrix of part proposals.
 
 if sum(sum(foregroundMask))==0    %check for empty mask
     partsProposal=[];
