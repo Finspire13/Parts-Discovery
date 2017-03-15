@@ -7,16 +7,16 @@ segmentsFile=fileSettings.segmentsFile;
 temporalSuperPixelsFile=fileSettings.temporalSuperPixelsFile;
 opticalFlowFile=fileSettings.opticalFlowFile;
 frameType=fileSettings.frameType;
-ourputPPMapsPath=fileSettings.ourputPPMapsPath;
-outputProposalsPath=fileSettings.outputProposalsPath;
-outputProposalsFile=fileSettings.outputProposalsFile;
-outputClusterResultFile=fileSettings.outputClusterResultFile;
-outputMaxClustersFile=fileSettings.outputMaxClustersFile;
+ppMapsPath=fileSettings.ppMapsPath;
+proposalsPath=fileSettings.proposalsPath;
+proposalsFile=fileSettings.proposalsFile;
+clusterOfProposalsFile=fileSettings.clusterOfProposalsFile;
 
 temporalInterval=parameterSettings.temporalInterval;
 partsNum=parameterSettings.partsNum;
 partsRelaxation=parameterSettings.partsRelaxation;
 degeneratedClusterPenalty=parameterSettings.degeneratedClusterPenalty;
+degeneratedClusterCriteria=parameterSettings.degeneratedClusterCriteria;
 
 %%
 
@@ -52,20 +52,26 @@ for sequenceIndex=1:length(sequences)
         proposalsAcrossVideo=cat(1,proposalsAcrossVideo,partsProposal);
 
         imagesc(partsProposalMap);
-        outputPath=strcat(ourputPPMapsPath,'/',int2str(classIndex),int2str(sequenceIndex),int2str(frameIndex),'.fig');
+        outputPath=strcat(ppMapsPath,'/',int2str(classIndex),int2str(sequenceIndex),int2str(frameIndex),'.fig');
         savefig(outputPath);
     end
 end
 
+outputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',proposalsFile);
+save(outputPath,'proposalsAcrossVideo');
 
+
+clusterNum=round(partsNum*partsRelaxation);
 totalClusterEnergy=Inf;
 for kmeansIndex=1:1000
-    [tempClusterResult,~,tempClusterEnergy]=kmeans(proposalsAcrossVideo,round(partsNum*partsRelaxation));
+    [tempClusterResult,tempClusterCentroids,tempClusterEnergy]=kmeans(proposalsAcrossVideo,clusterNum);
     if sum(tempClusterEnergy)<totalClusterEnergy
         clusterResult=tempClusterResult;
         clusterEnergy=tempClusterEnergy;
+        clusterCentroids=tempClusterCentroids;
         totalClusterEnergy=sum(tempClusterEnergy);
     end
+    disp(kmeansIndex);
 end
 
 
@@ -73,23 +79,19 @@ end
 %Normalize clusterEnergy
 for clusterIndex=1:length(clusterEnergy)
     clusterSize=numel(find(clusterResult==clusterIndex));
-    if clusterSize<=size(proposalsAcrossVideo,1)/200
-        clusterEnergy(clusterIndex)=degeneratedClusterPenalty;
-    else
-        clusterEnergy(clusterIndex)=clusterEnergy(clusterIndex)/clusterSize;
+    clusterEnergy(clusterIndex)=clusterEnergy(clusterIndex)/clusterSize;
+    
+    if clusterSize<=ceil(size(proposalsAcrossVideo,1)/(degeneratedClusterCriteria*clusterNum))
+        clusterEnergy(clusterIndex)=clusterEnergy(clusterIndex)+degeneratedClusterPenalty;
     end
 end
 
-[~,sortedClusters]=sort(clusterEnergy,'ascend');
-maxClusters=sortedClusters(1:partsNum);
+clusterOfProposals.clusterResult=clusterResult;
+clusterOfProposals.clusterEnergy=clusterEnergy;
+clusterOfProposals.clusterCentroids=clusterCentroids;
 
-
-outputPath=strcat(outputProposalsPath,'/',int2str(classIndex),'/',outputProposalsFile);
-save(outputPath,'proposalsAcrossVideo');
-outputPath=strcat(outputProposalsPath,'/',int2str(classIndex),'/',outputClusterResultFile);
-save(outputPath,'clusterResult');
-outputPath=strcat(outputProposalsPath,'/',int2str(classIndex),'/',outputMaxClustersFile);
-save(outputPath,'maxClusters');
+outputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',clusterOfProposalsFile);
+save(outputPath,'clusterOfProposals');
 
 end
 

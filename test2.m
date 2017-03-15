@@ -105,7 +105,6 @@ for frameIndex=startFrame:endFrame
     end
     disp(frameIndex);
 end
-occurrenceCount(:,:,clusterNum+1)=occurrenceCount(:,:,clusterNum+1);
 occurrenceCount(:,:,clusterNum+1)=max(max(occurrenceCount(:,:,clusterNum+1)))-occurrenceCount(:,:,clusterNum+1)+0.01;
 
 for x=1:quantizedSpace
@@ -129,8 +128,13 @@ for x=1:quantizedSpace
     end
     disp(x);
 end
-for l=1:clusterNum+1
-    occurrenceCount(:,:,l)=occurrenceCount(:,:,l)/sum(sum(occurrenceCount(:,:,l)));
+for l=1:clusterNum+1    % normalize
+    occurrenceCountSum=sum(sum(occurrenceCount(:,:,l)));
+    if occurrenceCountSum==0
+        occurrenceCount(:,:,l)=0;
+    else
+        occurrenceCount(:,:,l)=occurrenceCount(:,:,l)/sum(sum(occurrenceCount(:,:,l)));
+    end
 end
 
 
