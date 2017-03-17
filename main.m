@@ -9,8 +9,9 @@ fileSettings.opticalFlowFile='opticalFlow.mat';
 
 fileSettings.proposalsPath='./pp';
 fileSettings.proposalsFile='proposalsAcrossVideo.mat';
+fileSettings.proposalsMapFile='ppMapsAcrossVideo.mat';
 fileSettings.clusterOfProposalsFile='clusterOfProposals.mat';
-fileSettings.ppMapsPath='./ppMaps';
+fileSettings.clusterResultMapsPath='./clusterResultMaps';
 
 parameterSettings.frameHeight=225;
 parameterSettings.frameWidth=400;
@@ -18,19 +19,18 @@ parameterSettings.frameWidth=400;
 parameterSettings.temporalInterval=2;
 parameterSettings.partsNum=10;
 parameterSettings.quantizedSpace=500;
-parameterSettings.partsRelaxation=2.5;
-parameterSettings.degeneratedClusterPenalty=10;
-parameterSettings.degeneratedClusterCriteria=25;
+parameterSettings.partsRelaxation=2;
+parameterSettings.degeneratedClusterPenalty=Inf;
+parameterSettings.degeneratedClusterCriteria=80;
 parameterSettings.softMaskFactor=2;
-parameterSettings.backgroundProbFactor=0.2;
 
 %%
 
-% for classIndex=1:4
-%     clusterProposalsAcrossVideo(classIndex, fileSettings,parameterSettings)
-% end
+for classIndex=3:3
+     clusterProposalsAcrossVideo(classIndex, fileSettings,parameterSettings);
+end
 
 
 %%
 
-[ locationProbMap,occurrenceCount ]=estimateLocationModel(1, fileSettings,parameterSettings);
+%[ locationProbMap,occurrenceCount ]=estimateLocationModel(1, fileSettings,parameterSettings);
