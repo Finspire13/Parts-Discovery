@@ -1,6 +1,4 @@
 data/*
-pp/*
-ppMaps/*
-ppMapsTest/*
+output/*
+external/*
 Experiments/*
-clusterResultMaps/*

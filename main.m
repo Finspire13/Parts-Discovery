@@ -1,17 +1,21 @@
 %%
 fileSettings.dataPath = './data';
 fileSettings.frameType='*.jpg';     
-%fileSettings.gtLabelsFile='gtLabels.mat';
+fileSettings.gtLabelsFile='gtLabels.mat';
 fileSettings.segmentsFile='segments.mat';
-%fileSettings.superPixelsFile='superPixels.mat';
+fileSettings.superPixelsFile='superPixels.mat';
 fileSettings.temporalSuperPixelsFile='temporalSuperPixels.mat';
 fileSettings.opticalFlowFile='opticalFlow.mat';
 
-fileSettings.proposalsPath='./pp';
 fileSettings.proposalsFile='proposalsAcrossVideo.mat';
 fileSettings.proposalsMapFile='ppMapsAcrossVideo.mat';
 fileSettings.clusterOfProposalsFile='clusterOfProposals.mat';
-fileSettings.clusterResultMapsPath='./clusterResultMaps';
+fileSettings.partsSegmentationFile='partsSegmentation.mat';
+fileSettings.clusterResultMapsPath='./output/clusterResultMaps';
+fileSettings.partsSegmentationPath='./output/partSegments';
+fileSettings.proposalsPath='./output/pp';
+fileSettings.visualizationPath='./output/visualization';
+fileSettings.visualizationFile='visualization.avi';
 
 parameterSettings.frameHeight=225;
 parameterSettings.frameWidth=400;
@@ -26,11 +30,25 @@ parameterSettings.softMaskFactor=2;
 
 %%
 
-for classIndex=3:3
-     clusterProposalsAcrossVideo(classIndex, fileSettings,parameterSettings);
-end
+% for classIndex=3:3
+%      clusterProposalsAcrossVideo(classIndex, fileSettings,parameterSettings);
+% end
 
 
 %%
 
-%[ locationProbMap,occurrenceCount ]=estimateLocationModel(1, fileSettings,parameterSettings);
+%  [ locationProbMap,occurrenceCount ]=estimateLocationModel(3, fileSettings,parameterSettings);
+
+%%
+% for i=1:8
+%     [ partsSegmentation ] = videoSegmentParts( fileSettings, parameterSettings, 4, i, locationProbMap );
+% end
+
+%%
+%[ avgOverlapRatio, overlapRatio ] = evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices);
+
+%%
+
+for i=1:8
+    visualizeSegments( fileSettings,parameterSettings, 1, i );
+end

@@ -32,8 +32,9 @@ for classIndex=1:length(classes)
             currentFrame=imread(currentFramePath);
             nextFrame=imread(nextFramePath);
             
-            currentFlow=mex_LDOF(double(currentFrame),double(nextFrame));
-            flow{frameIndex}=currentFlow;
+            currentFlow=int16(mex_LDOF(double(currentFrame),double(nextFrame)));
+            flow{frameIndex}( :, :, 1 )=currentFlow( :, :, 2 );
+            flow{frameIndex}( :, :, 2 )=currentFlow( :, :, 1 );
         end
         outputPath=strcat(sequencePath,'/',outputFile);
         save(outputPath,'flow');
