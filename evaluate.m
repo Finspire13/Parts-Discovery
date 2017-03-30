@@ -2,6 +2,7 @@ function [ avgOverlapRatio, overlapRatio ] =...
     evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices)
 %EVALUATE Summary of this function goes here
 %   Detailed explanation goes here
+%%
 dataPath=fileSettings.dataPath;
 gtLabelsFile=fileSettings.gtLabelsFile;
 superPixelsFile=fileSettings.superPixelsFile;
@@ -23,9 +24,7 @@ if nargin==3
     labelMappingMethod='perClass';
 end
 
-gtLabelsSet=cell(1,length(sequenceIndices));
-gtMasksSet=cell(1,length(sequenceIndices));
-partsSegmentationSet=cell(1,length(sequenceIndices));
+partOverlapRatiosSet=cell(1,length(sequenceIndices));
 for sIndex=1:length(sequenceIndices)
     sequencePath=fullfile(classPath,sequences(sequenceIndices(sIndex)).name);
     load(fullfile(sequencePath,gtLabelsFile),'gtLabels');
@@ -34,7 +33,7 @@ for sIndex=1:length(sequenceIndices)
                   int2str(sequenceIndices(sIndex)),...
                   partsSegmentationFile),'partsSegmentation');
     
-    gtMasks=cell(length(gtLabels),1);
+    partOverlapRatiosVolume=[];
     for frame=1:length(gtLabels)
         if ~isempty(gtLabels{frame})
             gtLabel=gtLabels{frame};
@@ -42,133 +41,100 @@ for sIndex=1:length(sequenceIndices)
             for sp=1:length(gtLabel)
                 gtMask(gtMask==sp)=gtLabel(sp);
             end
-            gtMasks{frame}=gtMask;
+            
+            partOverlapRatio=zeros(partsNum+1,partsNum+1);
+            for i=1:partsNum+1
+                for j=1:partsNum+1
+                    andArea=bwarea(and(gtMask==j,...
+                                   partsSegmentation{frame}==i));
+                    orArea=bwarea(or(gtMask==j,...
+                                  partsSegmentation{frame}==i));
+                    if orArea==0
+                        partOverlapRatio(i,j)=0;
+                    else
+                        partOverlapRatio(i,j)=andArea/orArea;
+                    end
+                end
+            end
+            partOverlapRatiosVolume=cat(3,partOverlapRatiosVolume,...
+                                        partOverlapRatio);
         end
     end
     
-    gtLabelsSet{sIndex}=gtLabels;
-    gtMasksSet{sIndex}=gtMasks;
-    partsSegmentationSet{sIndex}=partsSegmentation;
-    
+    partOverlapRatiosSet{sIndex}=partOverlapRatiosVolume;
 end
 
+disp('stage 1 done');
 %%
 labelMapping=zeros(partsNum+1,length(sequenceIndices));
+permulations=perms(1:partsNum+1);
 if strcmp(labelMappingMethod,'perVideo')
     
     for sIndex=1:length(sequenceIndices)
-        gtLabels=gtLabelsSet{sIndex};
-        gtMasks=gtMasksSet{sIndex};
-        partsSegmentation=partsSegmentationSet{sIndex};
-        
-        for i=[partsNum+1 1:partsNum]
-            maxOverlapRatioSum=0;
-            maxJ=-1;
-            for j=1:partsNum+1
-                if nnz(labelMapping(:,sIndex)==j)==0
-                    overlapRatioSum=0;
-                    for frame=1:length(partsSegmentation)
-                        if ~isempty(gtLabels{frame})
-                            gtMask=gtMasks{frame};
-                            
-                            andArea=bwarea(and(gtMask==j,...
-                                             partsSegmentation{frame}==i));
-                            orArea=bwarea(or(gtMask==j,...
-                                             partsSegmentation{frame}==i));
-                            if orArea==0
-                                tempOverlapRatio=0;
-                            else
-                                tempOverlapRatio=andArea/orArea;
-                            end
-                            overlapRatioSum=...
-                                overlapRatioSum+tempOverlapRatio;
-                        end
-                    end
-                    if overlapRatioSum>=maxOverlapRatioSum
-                        maxOverlapRatioSum=overlapRatioSum;
-                        maxJ=j;
-                    end
-                end
+        partOverlapRatiosVolume=partOverlapRatiosSet{sIndex};
+        partOverlapRatioSums=sum(partOverlapRatiosVolume,3);
+
+        maxOverlapRatioSum=0;
+        maxPerm=0;
+        for permIndex=1:size(permulations,1)
+            overlapRatioSum=0;
+            for i=1:partsNum+1
+                overlapRatioSum=overlapRatioSum+...
+                partOverlapRatioSums(i,permulations(permIndex,i));
             end
-            labelMapping(i,sIndex)=maxJ;
-            disp(i);
+            if overlapRatioSum>=maxOverlapRatioSum
+                maxOverlapRatioSum=overlapRatioSum;
+                maxPerm=permIndex;
+            end
         end
+        labelMapping(:,sIndex)=permulations(maxPerm,:)';
     end
     
 elseif strcmp(labelMappingMethod,'perClass')
-    
-    gtLabels={};
-    gtMasks={};
-    partsSegmentation={};
+   
+    partOverlapRatiosVolume=[];
 
     for sIndex=1:length(sequenceIndices)
-        gtLabels=[gtLabels;gtLabelsSet{sIndex}];
-        gtMasks=[gtMasks;gtMasksSet{sIndex}];
-        partsSegmentation=[partsSegmentation partsSegmentationSet{sIndex}];
+        partOverlapRatiosVolume=cat(3,partOverlapRatiosVolume,...
+                                    partOverlapRatiosSet{sIndex});
     end
+    
+    partOverlapRatioSums=sum(partOverlapRatiosVolume,3);
         
-    for i=[partsNum+1 1:partsNum]
-        maxOverlapRatioSum=0;
-        maxJ=-1;
-        for j=1:partsNum+1
-            if nnz(labelMapping==j)==0
-                overlapRatioSum=0;
-                for frame=1:length(partsSegmentation)
-                    if ~isempty(gtLabels{frame})
-                        gtMask=gtMasks{frame};
-                        
-                        andArea=bwarea(and(gtMask==j,...
-                                             partsSegmentation{frame}==i));
-                        orArea=bwarea(or(gtMask==j,...
-                                         partsSegmentation{frame}==i));
-                        if orArea==0
-                            tempOverlapRatio=0;
-                        else
-                            tempOverlapRatio=andArea/orArea;
-                        end
-                        overlapRatioSum=overlapRatioSum+tempOverlapRatio;
-                    end
-                end
-                if overlapRatioSum>=maxOverlapRatioSum
-                    maxOverlapRatioSum=overlapRatioSum;
-                    maxJ=j;
-                end
-            end
+    maxOverlapRatioSum=0;
+    maxPerm=0;
+    for permIndex=1:size(permulations,1)
+        overlapRatioSum=0;
+        for i=1:partsNum+1
+            overlapRatioSum=overlapRatioSum+...
+            partOverlapRatioSums(i,permulations(permIndex,i));
         end
-        labelMapping(i,:)=maxJ;
-        disp(i);
+        if overlapRatioSum>=maxOverlapRatioSum
+            maxOverlapRatioSum=overlapRatioSum;
+            maxPerm=permIndex;
+        end
     end
+    labelMapping(:,:)=repmat(permulations(maxPerm,:)',...
+                             [1,length(sequenceIndices)]);
+    
 end
 
+disp('stage 2 done');
 %%
 overlapRatio={};
 for sIndex=1:length(sequenceIndices)
-    gtLabels=gtLabelsSet{sIndex};
-    gtMasks=gtMasksSet{sIndex};
-    partsSegmentation=partsSegmentationSet{sIndex};
+    partOverlapRatiosVolume=partOverlapRatiosSet{sIndex};
     
     overlapRatioInSequence=[];
-    for frame=1:length(partsSegmentation)
-        if ~isempty(gtLabels{frame})
-            overlapRatioInFrame=zeros(partsNum+1,1);
-
-            gtMask=gtMasks{frame};
-
-            for i=1:partsNum+1
-                andArea=bwarea(and(gtMask==labelMapping(i,sIndex),...
-                                   partsSegmentation{frame}==i));
-                orArea= bwarea(or(gtMask==labelMapping(i,sIndex),...
-                                  partsSegmentation{frame}==i));
-                if orArea==0
-                    overlapRatioInFrame(i)=0;
-                else  
-                    overlapRatioInFrame(i)=andArea/orArea;
-                end
-            end
-            overlapRatioInSequence=...
-                [overlapRatioInSequence overlapRatioInFrame];
-            disp(frame);
+    for frame=1:size(partOverlapRatiosVolume,3)
+        overlapRatioInFrame=zeros(partsNum+1,1);
+        partOverlapRatio=partOverlapRatiosVolume(:,:,frame);
+        for i=1:partsNum+1
+            overlapRatioInFrame(i)=...
+                partOverlapRatio(i,labelMapping(i,sIndex));
         end
+        overlapRatioInSequence=...
+            [overlapRatioInSequence overlapRatioInFrame];
     end
     overlapRatio{sIndex}=overlapRatioInSequence;
 end
@@ -177,8 +143,7 @@ temp=cellfun(@(x)mean(x,2),overlapRatio,'UniformOutput',false);
 temp=cellfun(@mean,temp);
 avgOverlapRatio=mean(temp);
 
-
-
+disp('stage 3 done');
 
 end
 
