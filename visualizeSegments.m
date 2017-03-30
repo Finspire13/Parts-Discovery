@@ -22,10 +22,10 @@ colors=[255 0 0;
     ];
 
 
-load(strcat(partsSegmentationPath,'/',int2str(classIndex),'/',int2str(sequenceIndex),'/',partsSegmentationFile),'partsSegmentation');
+load(fullfile(partsSegmentationPath,int2str(classIndex),int2str(sequenceIndex),partsSegmentationFile),'partsSegmentation');
 frameCells = readFrames( fileSettings,classIndex,sequenceIndex);
 
-outputPath=strcat(visualizationPath,'/',int2str(classIndex),'/',int2str(sequenceIndex),'/',visualizationFile);
+outputPath=fullfile(visualizationPath,int2str(classIndex),int2str(sequenceIndex),visualizationFile);
 outputVideo=VideoWriter(outputPath);
 open(outputVideo);
 

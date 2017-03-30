@@ -23,7 +23,7 @@ degeneratedClusterCriteria=parameterSettings.degeneratedClusterCriteria;
 
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
-classPath=strcat(dataPath ,'/' , classes(classIndex).name);
+classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
 sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
@@ -31,21 +31,21 @@ sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and 
 proposalsAcrossVideo=[];
 ppMapsAcrossVideo=[];
 for sequenceIndex=1:length(sequences)
-    sequencePath=strcat(classPath,'/',sequences(sequenceIndex).name);
+    sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
 
     %startFrame=1;
     %endFrame=220;
 
-    load(strcat(sequencePath,'/',segmentsFile),'segments');
-    load(strcat(sequencePath,'/',temporalSuperPixelsFile),'temporalSP');
-    load(strcat(sequencePath,'/',opticalFlowFile),'flow');
+    load(fullfile(sequencePath,segmentsFile),'segments');
+    load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
+    load(fullfile(sequencePath,opticalFlowFile),'flow');
     
     frames=dir([sequencePath strcat('/',frameType)]);
 
 
     for frameIndex=temporalInterval+1:length(frames)-temporalInterval-1
     %for frameIndex=startFrame:endFrame
-        framePath=strcat(sequencePath,'/',frames(frameIndex).name);
+        framePath=fullfile(sequencePath,frames(frameIndex).name);
         disp(framePath);
 
         [partsProposal,partsProposalMap,clusterResultMap]=clusterSuperpixelsInFrame(flow,temporalSP,segments,frameIndex,parameterSettings );
@@ -60,9 +60,9 @@ for sequenceIndex=1:length(sequences)
     end
 end
 
-outputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',proposalsFile);
+outputPath=fullfile(proposalsPath,int2str(classIndex),proposalsFile);
 save(outputPath,'proposalsAcrossVideo');
-outputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',proposalsMapFile);
+outputPath=fullfile(proposalsPath,int2str(classIndex),proposalsMapFile);
 save(outputPath,'ppMapsAcrossVideo','-v7.3');
 
 
@@ -96,7 +96,7 @@ clusterOfProposals.clusterResult=clusterResult;
 clusterOfProposals.clusterEnergy=clusterEnergy;
 clusterOfProposals.clusterCentroids=clusterCentroids;
 
-outputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',clusterOfProposalsFile);
+outputPath=fullfile(proposalsPath,int2str(classIndex),clusterOfProposalsFile);
 save(outputPath,'clusterOfProposals');
 
 

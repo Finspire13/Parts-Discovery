@@ -15,14 +15,14 @@ partsNum=parameterSettings.partsNum;
 
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
-classPath=strcat(dataPath ,'/' , classes(classIndex).name);
+classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
 sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
-sequencePath=strcat(classPath,'/',sequences(sequenceIndex).name);
+sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
 
-load(strcat(sequencePath,'/',segmentsFile),'segments');
-load(strcat(sequencePath,'/',temporalSuperPixelsFile),'temporalSP');
+load(fullfile(sequencePath,segmentsFile),'segments');
+load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
 
 %%
 for frame=1:length(temporalSP)
@@ -102,7 +102,7 @@ for frame=1:length(segments)
 
 end
 
-outputPath=strcat(partsSegmentationPath,'/',int2str(classIndex),'/',int2str(sequenceIndex),'/',partsSegmentationFile);
+outputPath=fullfile(partsSegmentationPath,int2str(classIndex),int2str(sequenceIndex),partsSegmentationFile);
 save(outputPath,'partsSegmentation');
 
 

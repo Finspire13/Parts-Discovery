@@ -14,19 +14,19 @@ addpath(opticalFlowPath);
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
 for classIndex=1:length(classes)
-    classPath=strcat(dataPath ,'/' , classes(classIndex).name);
+    classPath=fullfile(dataPath , classes(classIndex).name);
     sequences=dir(classPath);
     sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
     
     for sequenceIndex=1:length(sequences)
-        sequencePath=strcat(classPath,'/',sequences(sequenceIndex).name);
+        sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
         frames=dir([sequencePath strcat('/',frameType)]);
         %frames=frames(~ismember({frames.name},{'.','..'}));
         
         flow=cell(1,length(frames)-1);
         for frameIndex=1:length(frames)-1
-            currentFramePath=strcat(sequencePath,'/',frames(frameIndex).name);
-            nextFramePath=strcat(sequencePath,'/',frames(frameIndex+1).name);
+            currentFramePath=fullfile(sequencePath,frames(frameIndex).name);
+            nextFramePath=fullfile(sequencePath,frames(frameIndex+1).name);
             disp(currentFramePath);
             
             currentFrame=imread(currentFramePath);
@@ -36,7 +36,7 @@ for classIndex=1:length(classes)
             flow{frameIndex}( :, :, 1 )=currentFlow( :, :, 2 );
             flow{frameIndex}( :, :, 2 )=currentFlow( :, :, 1 );
         end
-        outputPath=strcat(sequencePath,'/',outputFile);
+        outputPath=fullfile(sequencePath,outputFile);
         save(outputPath,'flow');
         
     end

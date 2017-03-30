@@ -20,9 +20,9 @@ quantizedSpace=parameterSettings.quantizedSpace;
 
 %%
 
-inputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',proposalsMapFile);
+inputPath=fullfile(proposalsPath,int2str(classIndex),proposalsMapFile);
 load(inputPath);
-inputPath=strcat(proposalsPath,'/',int2str(classIndex),'/',clusterOfProposalsFile);
+inputPath=fullfile(proposalsPath,int2str(classIndex),clusterOfProposalsFile);
 load(inputPath);
 
 clusterResult=clusterOfProposals.clusterResult;
@@ -36,19 +36,19 @@ occurrenceCount=zeros(quantizedSpace,quantizedSpace,clusterNum+1);
 %for background
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
-classPath=strcat(dataPath ,'/' , classes(classIndex).name);
+classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
 sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
 
 for sequenceIndex=1:length(sequences)
-    sequencePath=strcat(classPath,'/',sequences(sequenceIndex).name);
+    sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
     
-    load(strcat(sequencePath,'/',segmentsFile),'segments');
+    load(fullfile(sequencePath,segmentsFile),'segments');
     
     frames=dir([sequencePath strcat('/',frameType)]);
     for frameIndex=temporalInterval+1:length(frames)-temporalInterval-1
-        framePath=strcat(sequencePath,'/',frames(frameIndex).name);
+        framePath=fullfile(sequencePath,frames(frameIndex).name);
         
         foregroundMask=segments{frameIndex};
         foregroundMask=bwareafilt(foregroundMask,1);

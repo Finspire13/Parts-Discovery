@@ -11,7 +11,7 @@ partsNum=parameterSettings.partsNum;
 %%
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
-classPath=strcat(dataPath ,'/' , classes(classIndex).name);
+classPath=fullfile(dataPath , classes(classIndex).name);
 
 sequences=dir(classPath);
 sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
@@ -26,10 +26,10 @@ gtLabelsSet=cell(1,length(sequenceIndices));
 gtMasksSet=cell(1,length(sequenceIndices));
 partsSegmentationSet=cell(1,length(sequenceIndices));
 for sIndex=1:length(sequenceIndices)
-    sequencePath=strcat(classPath,'/',sequences(sequenceIndices(sIndex)).name);
-    load(strcat(sequencePath,'/',gtLabelsFile),'gtLabels');
-    load(strcat(sequencePath,'/',superPixelsFile),'superPixels');
-    load(strcat(partsSegmentationPath,'/',int2str(classIndex),'/',int2str(sequenceIndices(sIndex)),'/',partsSegmentationFile),'partsSegmentation');
+    sequencePath=fullfile(classPath,sequences(sequenceIndices(sIndex)).name);
+    load(fullfile(sequencePath,gtLabelsFile),'gtLabels');
+    load(fullfile(sequencePath,superPixelsFile),'superPixels');
+    load(fullfile(partsSegmentationPath,int2str(classIndex),int2str(sequenceIndices(sIndex)),partsSegmentationFile),'partsSegmentation');
     
     gtMasks=cell(length(gtLabels),1);
     for frame=1:length(gtLabels)
