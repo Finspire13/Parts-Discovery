@@ -24,6 +24,9 @@ if nargin==3
     labelMappingMethod='perClass';
 end
 
+fprintf('Start evaluating...\n');
+tic;
+
 partOverlapRatiosSet=cell(1,length(sequenceIndices));
 for sIndex=1:length(sequenceIndices)
     sequencePath=fullfile(classPath,sequences(sequenceIndices(sIndex)).name);
@@ -64,7 +67,8 @@ for sIndex=1:length(sequenceIndices)
     partOverlapRatiosSet{sIndex}=partOverlapRatiosVolume;
 end
 
-disp('stage 1 done');
+fprintf('All parts overlap ratio precomputed... ');toc
+tic;
 %%
 labelMapping=zeros(partsNum+1,length(sequenceIndices));
 permulations=perms(1:partsNum+1);
@@ -119,7 +123,8 @@ elseif strcmp(labelMappingMethod,'perClass')
     
 end
 
-disp('stage 2 done');
+fprintf('Parts label mapped...  ');toc
+tic;
 %%
 overlapRatio={};
 for sIndex=1:length(sequenceIndices)
@@ -143,7 +148,7 @@ temp=cellfun(@(x)mean(x,2),overlapRatio,'UniformOutput',false);
 temp=cellfun(@mean,temp);
 avgOverlapRatio=mean(temp);
 
-disp('stage 3 done');
+fprintf('Average parts overlap ratio computed...  ');toc
 
 end
 

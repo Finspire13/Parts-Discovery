@@ -16,9 +16,11 @@ fileSettings.partsSegmentationPath='./output/partSegments';
 fileSettings.proposalsPath='./output/pp';
 fileSettings.visualizationPath='./output/visualization';
 fileSettings.visualizationFile='visualization.avi';
+fileSettings.locationModelPath='./output/locationModel';
+fileSettings.locationModelFile='locationProbMap.mat';
 
-parameterSettings.frameHeight=225;
-parameterSettings.frameWidth=400;
+%parameterSettings.frameHeight=225;
+%parameterSettings.frameWidth=400;
 
 parameterSettings.temporalInterval=2;
 parameterSettings.partsNum=10;
@@ -27,34 +29,29 @@ parameterSettings.partsRelaxation=2;
 parameterSettings.degeneratedClusterPenalty=Inf;
 parameterSettings.degeneratedClusterCriteria=80;
 parameterSettings.softMaskFactor=2;
-parameterSettings.foregroundSPCriteria=0.75;
+parameterSettings.foregroundSPCriteria=0.5;
 parameterSettings.partStrictness=0.7;
 
 %%
 
-for classIndex=3:3
-     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
-end
-
-
-%%
-
- [locationProbMap,occurrenceCount]=...
-     estimateLocationModel(fileSettings,parameterSettings,3);
-
-%%
-for i=1:8
-    [ partsSegmentation ]=...
+for classIndex=1:4
+    
+    clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
+    
+    estimateLocationModel(fileSettings,parameterSettings,classIndex);
+    
+    for sequenceIndex=1:8
+        
+        [ partsSegmentation ]=...
         videoSegmentParts(fileSettings,parameterSettings,...
-                          4, i, locationProbMap );
+                          classIndex, sequenceIndex, locationProbMap );
+                      
+        visualizeSegments( fileSettings,parameterSettings,...
+                           classIndex,sequenceIndex);
+    end     
 end
 
 %%
-[ avgOverlapRatio, overlapRatio ] = ...
-    evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices);
+% [ avgOverlapRatio, overlapRatio ] = ...
+%     evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices);
 
-%%
-
-for i=1:8
-    visualizeSegments( fileSettings,parameterSettings, 1, i );
-end

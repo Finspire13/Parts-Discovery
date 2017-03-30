@@ -1,4 +1,5 @@
-function [ frameCells ] = readFrames( fileSettings,classIndex,sequenceIndices)
+function [ frameCells ] = ...
+    readFrames( fileSettings,classIndex,sequenceIndices)
 %READFRAMES Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,7 +8,7 @@ frameType=fileSettings.frameType;
 %%
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
-classPath=fullfile(dataPath , classes(classIndex).name);
+classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
 sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
@@ -21,7 +22,6 @@ cellIndex=1;
 for sequenceIndex=sequenceIndices
     sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
     frames=dir([sequencePath strcat('/',frameType)]);
-    %frames=frames(~ismember({frames.name},{'.','..'}));
 
     for frameIndex=1:length(frames)
         framePath=fullfile(sequencePath,frames(frameIndex).name);

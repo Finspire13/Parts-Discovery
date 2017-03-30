@@ -9,6 +9,8 @@ frameType=fileSettings.frameType;
 proposalsPath=fileSettings.proposalsPath;
 proposalsMapFile=fileSettings.proposalsMapFile;
 clusterOfProposalsFile=fileSettings.clusterOfProposalsFile;
+locationModelPath=fileSettings.locationModelPath;
+locationModelFile=fileSettings.locationModelFile;
 
 temporalInterval=parameterSettings.temporalInterval;
 partsNum=parameterSettings.partsNum;
@@ -17,7 +19,7 @@ softMaskFactor=parameterSettings.softMaskFactor;
 quantizedSpace=parameterSettings.quantizedSpace;
 
 %%
-
+tic;
 inputPath=fullfile(proposalsPath,int2str(classIndex),proposalsMapFile);
 load(inputPath);
 inputPath=fullfile(proposalsPath,int2str(classIndex),clusterOfProposalsFile);
@@ -64,8 +66,6 @@ for sequenceIndex=1:length(sequences)
                                  [quantizedSpace quantizedSpace]);
         occurrenceCount(:,:,clusterNum+1)=...
             occurrenceCount(:,:,clusterNum+1)+resizedSoftMask;
-        
-        disp(framePath);
     end
 end
 occurrenceCount(:,:,clusterNum+1)=...
@@ -142,6 +142,15 @@ for l=1:partsNum+1
 end
 
 [~,maxLabel]=max(locationProbMap,[],3);
-figure;imagesc(maxLabel);
+imagesc(maxLabel);
 
+fprintf('Location model estimated for class: %d... ',classIndex);
+toc
+
+savePath=fullfile(locationModelPath,int2str(classIndex),locationModelFile);
+save(savePath,'locationProbMap');
+
+figPath=strcat(locationModelPath,'/',int2str(classIndex),'/',...
+               'result.png');
+print('-dpng',figPath);
 end

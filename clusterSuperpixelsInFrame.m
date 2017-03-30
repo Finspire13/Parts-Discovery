@@ -21,7 +21,6 @@ foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
 partStrictness=parameterSettings.partStrictness;
 
 %%
-
 foregroundMask=segments{frame};
 if sum(sum(foregroundMask))==0    %check for empty mask
     partsProposal=[];
@@ -66,11 +65,8 @@ else
             extractPartsProposal(clusterResultMap,...
                                  foregroundMask,quantizedSpace);
     end
-
-
-    %figure;dendrogram(links,480);
-    %figure;imagesc(partsProposalMap);
-    %figure;imshow('data/horseLeft/1/175.jpg');
+    
+    
 
 end
 

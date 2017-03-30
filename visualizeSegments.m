@@ -1,4 +1,6 @@
-function [  ] = visualizeSegments( fileSettings,parameterSettings, classIndex, sequenceIndex )
+function [  ] =...
+    visualizeSegments( fileSettings,parameterSettings,...
+                       classIndex,sequenceIndex)
 %VISUALIZESEGMENTS Summary of this function goes here
 %   Detailed explanation goes here
 partsSegmentationFile=fileSettings.partsSegmentationFile;
@@ -20,12 +22,15 @@ colors=[255 0 0;
     203 0 255;
     0 0 0;
     ];
-
-
-load(fullfile(partsSegmentationPath,int2str(classIndex),int2str(sequenceIndex),partsSegmentationFile),'partsSegmentation');
+%%
+tic;
+load(fullfile(partsSegmentationPath,int2str(classIndex),...
+              int2str(sequenceIndex),partsSegmentationFile),...
+              'partsSegmentation');
 frameCells = readFrames( fileSettings,classIndex,sequenceIndex);
 
-outputPath=fullfile(visualizationPath,int2str(classIndex),int2str(sequenceIndex),visualizationFile);
+outputPath=fullfile(visualizationPath,int2str(classIndex),...
+                    int2str(sequenceIndex),visualizationFile);
 outputVideo=VideoWriter(outputPath);
 open(outputVideo);
 
@@ -36,27 +41,38 @@ for frameIndex=1:length(frameCells)
     frameG=frame(:,:,2);
     frameB=frame(:,:,3);
     partsSegmentationInFrame=partsSegmentation{frameIndex};
+    
     for partIndex=1:partsNum+1
         
-        frameR(partsSegmentationInFrame==partIndex)=frameR(partsSegmentationInFrame==partIndex)+0.5*colors(partIndex,1);
+        frameR(partsSegmentationInFrame==partIndex)=...
+            frameR(partsSegmentationInFrame==partIndex)+0.5*colors(partIndex,1);
         frameR(frameR>255)=255;
         frameR(frameR<0)=0;
-        frameG(partsSegmentationInFrame==partIndex)=frameG(partsSegmentationInFrame==partIndex)+0.5*colors(partIndex,2);
+        
+        frameG(partsSegmentationInFrame==partIndex)=...
+            frameG(partsSegmentationInFrame==partIndex)+0.5*colors(partIndex,2);
         frameG(frameG>255)=255;
         frameG(frameG<0)=0;
-        frameB(partsSegmentationInFrame==partIndex)=frameB(partsSegmentationInFrame==partIndex)+0.5*colors(partIndex,3);
+        
+        frameB(partsSegmentationInFrame==partIndex)=...
+            frameB(partsSegmentationInFrame==partIndex)+0.5*colors(partIndex,3);
         frameB(frameB>255)=255;
         frameB(frameB<0)=0;
+        
     end
+    
     frame(:,:,1)=frameR;
     frame(:,:,2)=frameG;
     frame(:,:,3)=frameB;
     frame=uint8(frame);
     writeVideo(outputVideo,frame);
-    disp(frameIndex);
 end
 
 close(outputVideo);
+
+fprintf('Visualization generated for sequence %d class %d... ',...
+        sequenceIndex,classIndex);
+toc
 
 end
 

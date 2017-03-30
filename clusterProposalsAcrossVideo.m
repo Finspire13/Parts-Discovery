@@ -42,7 +42,7 @@ for sequenceIndex=1:length(sequences)
 
     for frameIndex=temporalInterval+1:length(frames)-temporalInterval-1
         %framePath=fullfile(sequencePath,frames(frameIndex).name);
-
+        tic;
         [partsProposal,partsProposalMap,clusterResultMap]=...
             clusterSuperpixelsInFrame(flow,temporalSP,segments,...
                                       frameIndex,parameterSettings);
@@ -53,10 +53,18 @@ for sequenceIndex=1:length(sequences)
         imagesc(clusterResultMap);
         
         outputPath=strcat(clusterResultMapsPath,'/',int2str(classIndex),...
-                   int2str(sequenceIndex),int2str(frameIndex),'.fig');
-        savefig(outputPath);
+                   int2str(sequenceIndex),int2str(frameIndex),'.png');
+        print('-dpng',outputPath);
+        
+        framePath=fullfile(sequencePath,frames(frameIndex).name);
+        fprintf(strcat('Foreground superpixels clustered in frame ',...
+                        framePath,'... '));
+        toc
     end
+    
+    fprintf('All frames clustered for sequence: %d... \n',sequenceIndex);
 end
+fprintf('All frames clustered for class: %d... \n',classIndex);
 
 outputPath=fullfile(proposalsPath,int2str(classIndex),proposalsFile);
 save(outputPath,'proposalsAcrossVideo');
@@ -64,7 +72,7 @@ outputPath=fullfile(proposalsPath,int2str(classIndex),proposalsMapFile);
 save(outputPath,'ppMapsAcrossVideo','-v7.3');
 
 %%
-
+tic;
 clusterNum=round(partsNum*partsRelaxation);
 
 totalClusterEnergy=Inf;
@@ -91,6 +99,8 @@ for clusterIndex=1:length(clusterEnergy)
             clusterEnergy(clusterIndex)+degeneratedClusterPenalty;
     end
 end
+fprintf('Parts proposals clustered for class: %d... ',classIndex);
+toc
 
 clusterOfProposals.clusterResult=clusterResult;
 clusterOfProposals.clusterEnergy=clusterEnergy;
