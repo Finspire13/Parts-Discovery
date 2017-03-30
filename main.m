@@ -27,25 +27,31 @@ parameterSettings.partsRelaxation=2;
 parameterSettings.degeneratedClusterPenalty=Inf;
 parameterSettings.degeneratedClusterCriteria=80;
 parameterSettings.softMaskFactor=2;
+parameterSettings.foregroundSPCriteria=0.75;
+parameterSettings.partStrictness=0.7;
 
 %%
 
-% for classIndex=3:3
-%      clusterProposalsAcrossVideo(classIndex, fileSettings,parameterSettings);
-% end
+for classIndex=3:3
+     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
+end
 
 
 %%
 
-%  [ locationProbMap,occurrenceCount ]=estimateLocationModel(3, fileSettings,parameterSettings);
+ [locationProbMap,occurrenceCount]=...
+     estimateLocationModel(fileSettings,parameterSettings,3);
 
 %%
-% for i=1:8
-%     [ partsSegmentation ] = videoSegmentParts( fileSettings, parameterSettings, 4, i, locationProbMap );
-% end
+for i=1:8
+    [ partsSegmentation ]=...
+        videoSegmentParts(fileSettings,parameterSettings,...
+                          4, i, locationProbMap );
+end
 
 %%
-%[ avgOverlapRatio, overlapRatio ] = evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices);
+[ avgOverlapRatio, overlapRatio ] = ...
+    evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices);
 
 %%
 

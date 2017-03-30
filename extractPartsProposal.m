@@ -1,4 +1,5 @@
-function [ partsProposal,partsProposalMap ] = extractPartsProposal( clusterResultMap, foregroundMask, quantizedSpace )
+function [ partsProposal,partsProposalMap ] =...
+    extractPartsProposal( clusterResultMap, foregroundMask, quantizedSpace)
 %   Extract part proposals from part proposals map.
 %--Input--
 %   partsProposalMap: Part proposals map.
@@ -18,7 +19,8 @@ prop=regionprops(foregroundMask);
 foregroundBB=prop.BoundingBox;
 
 croppedClusterResultMap=imcrop(clusterResultMap,foregroundBB);
-resizedClusterResultMap=imresize(croppedClusterResultMap,[quantizedSpace quantizedSpace],'nearest');
+resizedClusterResultMap=imresize(croppedClusterResultMap,...
+                                [quantizedSpace quantizedSpace],'nearest');
 for ppIndex=1:ppNum
 
     ppMap=resizedClusterResultMap==ppLabels(ppIndex);
