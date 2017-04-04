@@ -19,6 +19,10 @@ fileSettings.visualizationFile='visualization.avi';
 fileSettings.locationModelPath='./output/locationModel';
 fileSettings.locationModelFile='locationProbMap.mat';
 
+fileSettings.opticalFlowPath='';
+fileSettings.optimizationSolverPath='./external/optimization/TRW-S/';
+fileSettings.fastSegUtilPath='./external/fromFastSeg';
+
 %parameterSettings.frameHeight=225;
 %parameterSettings.frameWidth=400;
 
@@ -29,27 +33,39 @@ parameterSettings.partsRelaxation=2;
 parameterSettings.degeneratedClusterPenalty=Inf;
 parameterSettings.degeneratedClusterCriteria=80;
 parameterSettings.softMaskFactor=2;
-parameterSettings.foregroundSPCriteria=0.5;
+parameterSettings.foregroundSPCriteria=0.3;
 parameterSettings.partStrictness=0.7;
 
-%%
+parameterSettings.spatialWeight=0;
+parameterSettings.temporalWeight=1.2;
 
-for classIndex=1:4
-    
-    clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
-    
-    estimateLocationModel(fileSettings,parameterSettings,classIndex);
-    
+%%
+for classIndex=3:4
     for sequenceIndex=1:8
-        
-        [ partsSegmentation ]=...
-        videoSegmentParts(fileSettings,parameterSettings,...
-                          classIndex, sequenceIndex, locationProbMap );
-                      
-        visualizeSegments( fileSettings,parameterSettings,...
-                           classIndex,sequenceIndex);
-    end     
+        videoSegmentParts2( fileSettings,parameterSettings,classIndex,sequenceIndex);
+        visualizeSegments( fileSettings,parameterSettings,classIndex,sequenceIndex);
+    end
 end
+
+%[ avgOverlapRatio, overlapRatio ] = evaluate( fileSettings,parameterSettings, 3, 4);
+
+
+% for classIndex=2:4
+%     
+%     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
+%     
+%     estimateLocationModel(fileSettings,parameterSettings,classIndex);
+%     
+%     for sequenceIndex=1:8
+%         
+%         [ partsSegmentation ]=...
+%         videoSegmentParts(fileSettings,parameterSettings,...
+%                           classIndex, sequenceIndex );
+%                       
+%         visualizeSegments( fileSettings,parameterSettings,...
+%                            classIndex,sequenceIndex);
+%     end     
+% end
 
 %%
 % [ avgOverlapRatio, overlapRatio ] = ...

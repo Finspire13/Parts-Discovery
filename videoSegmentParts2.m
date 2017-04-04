@@ -1,3 +1,9 @@
+function [ partsSegmentation ] = ...
+    videoSegmentParts2( fileSettings, parameterSettings, ...
+                       classIndex,sequenceIndex)
+%VIDEOSEGMENTPARTS Summary of this function goes here
+%   Detailed explanation goes here
+
 dataPath = fileSettings.dataPath;
 segmentsFile=fileSettings.segmentsFile;
 superPixelsFile=fileSettings.superPixelsFile;
@@ -11,6 +17,7 @@ optimizationSolverPath=fileSettings.optimizationSolverPath;
 fastSegUtilPath=fileSettings.fastSegUtilPath;
 
 partsNum=parameterSettings.partsNum;
+foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
 
 %%
 
@@ -35,9 +42,38 @@ addpath(optimizationSolverPath);
 addpath(fastSegUtilPath);
 
 %%
+foregroundSuperPixels=cell(length(superPixels),1);
+for frame=1:length(superPixels)
+    
+    foregroundSPIndex=2;
+    foregroundMask=segments{frame};
+    foregroundMask=bwareafilt(foregroundMask,1);
+    SPs=unique(superPixels{frame});
+    
+    temp=superPixels{frame};
+    
+    for sp=SPs'
+        spMap=superPixels{frame};
+        spMap(spMap~=sp)=0;
+        
+        if nnz(and(spMap,foregroundMask))>nnz(spMap)*foregroundSPCriteria
+            temp(superPixels{frame}==sp)=foregroundSPIndex;
+            foregroundSPIndex=foregroundSPIndex+1;
+        else
+            temp(superPixels{frame}==sp)=1;
+        end
+    end
+    
+    foregroundSuperPixels{frame}=temp;
+end
+
+fprintf('Foreground superpixels extracted... ');toc
+tic; 
+
+%%
 
 [ uniqueSuperPixels, ~, ~, superpixelsNum ] = ...
-    makeSuperpixelIndexUnique( superPixels );
+    makeSuperpixelIndexUnique( foregroundSuperPixels );
 
 unaryTerm=zeros(partsNum+1,superpixelsNum);
 for frame=1:length(uniqueSuperPixels)
@@ -51,6 +87,7 @@ for frame=1:length(uniqueSuperPixels)
         continue;
     end
     
+    foregroundMask=bwareafilt(foregroundMask,1);
     prop=regionprops(foregroundMask);
     foregroundBB=prop.BoundingBox;
     foregroundBB=ceil(foregroundBB);
@@ -79,8 +116,10 @@ for frame=1:length(uniqueSuperPixels)
         unaryTerm(:,sp)=reshape(sum(sum(spProbs))./areaSize,[partsNum+1 1]);
         unaryTerm(:,sp)=1-unaryTerm(:,sp);
     end
-    disp(frame);
 end
+
+fprintf('Unary term computed... ');toc
+tic; 
 
 %%
 
@@ -91,7 +130,8 @@ imgs=readFrames( fileSettings,classIndex,sequenceIndex);
 
 pairPotentials = computePairwisePotentials( parameterSettings,...
           uniqueSuperPixels,flow, colours, centres, superpixelsNum);
-
+pairPotentials.source=pairPotentials.source+1;
+pairPotentials.destination=pairPotentials.destination+1;
 
 edgeCoefficients=sparse(double(pairPotentials.source),...
         double(pairPotentials.destination),double(pairPotentials.value),...
@@ -107,14 +147,14 @@ tic;
 
 %%
 
-partsSegmentation={};
+partsSegmentation=cell(length(uniqueSuperPixels),1);
 for frame=1:length(uniqueSuperPixels)
     SPs=unique(uniqueSuperPixels{frame});
-    spsMap=uniqueSuperPixels{frame};
+    temp=uniqueSuperPixels{frame};
     for sp=SPs'
-        spsMap(spsMap==sp)=spLabels(sp);
+        temp(uniqueSuperPixels{frame}==sp)=spLabels(sp);
     end
-    partsSegmentation{frame}=spsMap;
+    partsSegmentation{frame}=temp;
 end
 
 fprintf('Parts segmentation generated for sequence %d class %d... ',...
@@ -124,3 +164,6 @@ toc
 outputPath=fullfile(partsSegmentationPath,int2str(classIndex),...
                     int2str(sequenceIndex),partsSegmentationFile);
 save(outputPath,'partsSegmentation');
+
+
+end

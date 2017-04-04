@@ -25,9 +25,9 @@ sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
 
 load(fullfile(sequencePath,segmentsFile),'segments');
 load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
-load(fullfile(locationModelPath,int2str(classIndex),locationModelFile)...
-              ,'locationProbMap');
-
+locationModel=load(fullfile(locationModelPath,...
+                int2str(classIndex),locationModelFile),'locationProbMap');
+locationModel=locationModel.locationProbMap;
 %%
 for frame=1:length(temporalSP)
     temporalSP{frame}=temporalSP{frame}+partsNum+1;
@@ -90,7 +90,7 @@ for frame=1:length(segments)
     
     for sp=foregroundSP
         spMap=croppedForegroundSPMap;
-        spMap(spMap~=sp)=0;
+        spMap=(spMap==sp);
         spProbs=resizedLocationModel.*repmat(double(spMap),1,1,partsNum+1);
         [~,maxLabel]=max(sum(sum(spProbs)));
         frameResult(frameResult==sp)=maxLabel;

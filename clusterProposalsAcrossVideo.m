@@ -53,8 +53,8 @@ for sequenceIndex=1:length(sequences)
         imagesc(clusterResultMap);
         
         outputPath=strcat(clusterResultMapsPath,'/',int2str(classIndex),...
-                   int2str(sequenceIndex),int2str(frameIndex),'.png');
-        print('-dpng',outputPath);
+                   int2str(sequenceIndex),int2str(frameIndex),'.fig'); 
+        savefig(outputPath); 
         
         framePath=fullfile(sequencePath,frames(frameIndex).name);
         fprintf(strcat('Foreground superpixels clustered in frame ',...
