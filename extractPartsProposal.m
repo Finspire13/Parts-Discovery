@@ -1,12 +1,13 @@
 function [ partsProposal,partsProposalMap ] =...
     extractPartsProposal( clusterResultMap, foregroundMask, quantizedSpace)
-%   Extract part proposals from part proposals map.
+%   Extract part proposals from cluster result map of foreground superpixels
 %--Input--
-%   partsProposalMap: Part proposals map.
+%   clusterResultMap: Cluster result map of foreground superpixels
 %   foregroundMask: Foreground mask.
+%   quantizedSpace: Size of quantized space where location model locates
 %--Output--
-%   partsProposal: Nx4 matrix of part proposals.
-
+%   partsProposal: Nx3 matrix of part proposals
+%   partsProposalMap: HxWxN matrix of part proposal maps
 
 ppLabels=unique(clusterResultMap);
 ppLabels=ppLabels(ppLabels~=0);
@@ -27,7 +28,6 @@ for ppIndex=1:ppNum
     ppMap=bwareafilt(ppMap,1);
 
     prop=regionprops(ppMap);
-    %ppBB=prop.BoundingBox;      %[left corner  size]
     ppCentroid=prop.Centroid;
     ppArea=prop.Area;
 
@@ -35,6 +35,7 @@ for ppIndex=1:ppNum
     ppY=ppCentroid(2);
     ppScale=sqrt(ppArea);
 
+    % Use coordinate of part proposal centroid and square root of part proposal area to describe
     partsProposal(ppIndex,:)=[ppX ppY ppScale];
     partsProposalMap(:,:,ppIndex)=ppMap;
 end

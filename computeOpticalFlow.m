@@ -1,3 +1,5 @@
+%% Compute optical flow using 'brox2010'
+
 %% Set Paths and Parameters
 dataPath = './data';
 frameType = '*.jpg'; 
@@ -37,4 +39,3 @@ for classIndex=1:length(classes)
     end
     
 end
-

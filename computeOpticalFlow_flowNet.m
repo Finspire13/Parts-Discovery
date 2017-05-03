@@ -1,3 +1,5 @@
+%% Compute optical flow using 'FlowNet'
+
 addpath('./external/opticalFlowUtil');
 
 classes=dir('./data');

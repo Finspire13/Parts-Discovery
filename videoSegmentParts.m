@@ -1,8 +1,16 @@
 function [ partsSegmentation ] = ...
     videoSegmentParts( fileSettings, parameterSettings, ...
                        classIndex,sequenceIndex)
-%VIDEOSEGMENTPARTS Summary of this function goes here
-%   Detailed explanation goes here
+%   Get parts segmentation using optimization method
+%--Input--
+%   fileSettings: ...
+%   parameterSettings: ...
+%   classIndex: For which class to compute parts segmentation
+%   sequenceIndex: For which sequence to compute parts segmentation
+%--Output--
+%   partsSegmentation: Parts segmentation result. (Saved to file)
+
+%% Get Settings
 
 dataPath = fileSettings.dataPath;
 segmentsFile=fileSettings.segmentsFile;
@@ -19,7 +27,7 @@ fastSegUtilPath=fileSettings.fastSegUtilPath;
 partsNum=parameterSettings.partsNum;
 foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
 
-%%
+%% Load data
 
 tic;
 classes=dir(dataPath);
@@ -33,7 +41,6 @@ sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
 load(fullfile(sequencePath,superPixelsFile),'superPixels');
 load(fullfile(sequencePath,segmentsFile),'segments');
 load(fullfile(sequencePath,opticalFlowFile),'flow');
-% load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
 locationModel=load(fullfile(locationModelPath,...
                 int2str(classIndex),locationModelFile),'locationProbMap');
 locationModel=locationModel.locationProbMap;
@@ -41,7 +48,9 @@ locationModel=locationModel.locationProbMap;
 addpath(optimizationSolverPath);
 addpath(fastSegUtilPath);
 
-%%
+
+%% Extract foreground superpixels
+
 foregroundSuperPixels=cell(length(superPixels),1);
 for frame=1:length(superPixels)
     
@@ -70,7 +79,8 @@ end
 fprintf('Foreground superpixels extracted... ');toc
 tic; 
 
-%%
+
+%% Computed unary term (Location term)
 
 [ uniqueSuperPixels, superpixelFrameIDs, ~, superpixelsNum ] = ...
     makeSuperpixelIndexUnique( foregroundSuperPixels );
@@ -121,7 +131,7 @@ end
 fprintf('Unary term computed... ');toc
 tic; 
 
-%%
+%% Load imaged and shape data
 
 imgs=readFrames( fileSettings,classIndex,sequenceIndex);
 [~,cutsMask]=loadShapeData(fileSettings,segments,classIndex,sequenceIndex);
@@ -129,7 +139,7 @@ imgs=readFrames( fileSettings,classIndex,sequenceIndex);
 fprintf('Shape cuts data loaded... ');toc
 tic; 
 
-%%
+%% Compute pairwise terms (Shape term & Temporal term & Spatial term)
 
 [ colours, centres, ~ ] = ...
     getSuperpixelStats( imgs, uniqueSuperPixels, superpixelsNum );
@@ -152,7 +162,8 @@ tic;
       
 [spLabels, ~]=mrfMinimizeMex(unaryTerm,edgeCoefficients,labelDependencies);
 
-%%
+
+%% Format result and save
 
 partsSegmentation=cell(length(uniqueSuperPixels),1);
 for frame=1:length(uniqueSuperPixels)

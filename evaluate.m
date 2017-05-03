@@ -1,8 +1,18 @@
 function [ avgOverlapRatio, overlapRatio ] =...
     evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices)
-%EVALUATE Summary of this function goes here
-%   Detailed explanation goes here
-%%
+%   Evaluation of part segmentation result
+%--Inupt--
+%   fileSettings:...
+%   parameterSettings:...
+%   classIndex: For which class to evaluate
+%   sequenceIndices: For which sequence to evaluate. If this parameter is 
+%                    given, 'IoU per video' is computed. If not, 'IoU per class' is computed.
+%--Output--
+%   avgOverlapRatio: Average IoU
+%   overlapRatio: Detailed IoU for each part in each frame
+
+%% Get Settings
+
 dataPath=fileSettings.dataPath;
 gtLabelsFile=fileSettings.gtLabelsFile;
 superPixelsFile=fileSettings.superPixelsFile;
@@ -10,7 +20,10 @@ partsSegmentationFile=fileSettings.partsSegmentationFile;
 partsSegmentationPath=fileSettings.partsSegmentationPath;
 
 partsNum=parameterSettings.partsNum;
-%%
+
+
+%% Precompute all parts overlap ratio
+
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
 classPath=fullfile(dataPath , classes(classIndex).name);
@@ -69,7 +82,9 @@ end
 
 fprintf('All parts overlap ratio precomputed... ');toc
 tic;
-%%
+
+%% Exhausted search of label mapping
+
 labelMapping=zeros(partsNum+1,length(sequenceIndices));
 permulations=perms(1:partsNum+1);
 if strcmp(labelMappingMethod,'perVideo')
@@ -125,7 +140,9 @@ end
 
 fprintf('Parts label mapped...  ');toc
 tic;
-%%
+
+%% Compute IoUs
+
 overlapRatio={};
 for sIndex=1:length(sequenceIndices)
     partOverlapRatiosVolume=partOverlapRatiosSet{sIndex};

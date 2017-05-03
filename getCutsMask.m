@@ -1,10 +1,17 @@
 function [ masks ] = getCutsMask( cuts,foregroundMask )
-%GETCUTSMASK Summary of this function goes here
-%   Detailed explanation goes here
+%   Get masks of shape cut.
+%--Input--
+%   cuts: Nx4 matrix of shape cuts
+%   foregroundMask: Foreground mask
+%--Output--
+%   masks: Nx1 cells of HxWx2 masks image.
+
+%%
 
 height=size(foregroundMask,1);
 width=size(foregroundMask,2);
 
+% Coordinate of four corners
 upperLeftPoint=[0.5 0.5];
 upperRightPoint=[width+0.5 0.5];
 lowerLeftPoint=[0.5 height+0.5];
@@ -16,6 +23,7 @@ for cutIndex=1:size(cuts,1)
     
     cut=cuts(cutIndex,:);
     
+    %% Get point of intersection of cut line and four image boundaries
     %% y=0
 
     y=0.5;
@@ -86,7 +94,7 @@ for cutIndex=1:size(cuts,1)
         end
     end
     
-    %% 
+    %% Get masks
 
     if (isempty(point1)+isempty(point2)+isempty(point3)+isempty(point4))~=2
         fprintf('Shape Data Error...\n') %left empty
@@ -147,12 +155,13 @@ for cutIndex=1:size(cuts,1)
         mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
         mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);     
     end
-    %%
     
+    %% Select the component where cut point or its neighbors locate    
     
     mask(:,:,1)=and(mask(:,:,1),foregroundMask);
     mask(:,:,2)=and(mask(:,:,2),foregroundMask);
     
+    % Cut point A and its neighbors
     cutPointANInd(1)=sub2ind([height width], max(cut(2)-1,1), max(cut(1)-1,1));
     cutPointANInd(2)=sub2ind([height width], max(cut(2)-1,1), cut(1));
     cutPointANInd(3)=sub2ind([height width], max(cut(2)-1,1), min(cut(1)+1,width));
@@ -163,6 +172,7 @@ for cutIndex=1:size(cuts,1)
     cutPointANInd(8)=sub2ind([height width], min(cut(2)+1,height), cut(1));
     cutPointANInd(9)=sub2ind([height width], min(cut(2)+1,height), min(cut(1)+1,width));
     
+    % Cut point B and its neighbor
     cutPointBNInd(1)=sub2ind([height width], max(cut(4)-1,1), max(cut(3)-1,1));
     cutPointBNInd(2)=sub2ind([height width], max(cut(4)-1,1), cut(3));
     cutPointBNInd(3)=sub2ind([height width], max(cut(4)-1,1), min(cut(3)+1,width));
@@ -214,8 +224,6 @@ for cutIndex=1:size(cuts,1)
     masks{cutIndex}=mask;
 
 end
-
-
 
 end
 

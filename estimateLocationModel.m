@@ -1,7 +1,16 @@
 function [ locationProbMap,occurrenceCount ] = ...
     estimateLocationModel(fileSettings,parameterSettings,classIndex)
-%ESTIMATELOCATIONMODEL Summary of this function goes here
-%   Detailed explanation goes here
+%   Estimate location model using clusters of part proposals
+%--Inupt--
+%   fileSettings:...
+%   parameterSettings:...
+%   classIndex: For which class to estimate location model
+%--Output--
+%   locationProbMap: Location model. Saved to file
+%   occurrenceCount: Unnormolized location model
+%   result.png: Visulization of location model. Saved to file
+
+%% Get Settings
 
 dataPath=fileSettings.dataPath;
 segmentsFile=fileSettings.segmentsFile;
@@ -18,7 +27,8 @@ partsRelaxation=parameterSettings.partsRelaxation;
 softMaskFactor=parameterSettings.softMaskFactor;
 quantizedSpace=parameterSettings.quantizedSpace;
 
-%%
+%% Load data and initialization
+
 tic;
 inputPath=fullfile(proposalsPath,int2str(classIndex),proposalsMapFile);
 load(inputPath);
@@ -33,8 +43,8 @@ clusterNum=round(partsNum*partsRelaxation);
 
 occurrenceCount=zeros(quantizedSpace,quantizedSpace,clusterNum+1);
 
-%%
-%for background
+
+%% Estimate location model for background
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
 classPath=fullfile(dataPath, classes(classIndex).name);
@@ -53,7 +63,7 @@ for sequenceIndex=1:length(sequences)
         
         foregroundMask=segments{frameIndex};
         foregroundMask=bwareafilt(foregroundMask,1);
-        if sum(sum(foregroundMask))==0
+        if sum(sum(foregroundMask))==0 % Empty mask
             continue;
         end
         
@@ -72,13 +82,15 @@ occurrenceCount(:,:,clusterNum+1)=...
     max(max(occurrenceCount(:,:,clusterNum+1)))-...
     occurrenceCount(:,:,clusterNum+1)+0.01;
 
-%%
-%for parts
+
+%% Estimate location model for foreground parts
+
 for l=1:clusterNum
     occurrenceCount(:,:,l)=sum(ppMapsAcrossVideo(:,:,clusterResult==l),3);
 end
 
-for l=1:clusterNum+1    % normalize
+% Normalize by size
+for l=1:clusterNum+1    
     occurrenceCountSum=sum(sum(occurrenceCount(:,:,l)));
     if occurrenceCountSum==0
         occurrenceCount(:,:,l)=0;
@@ -87,7 +99,10 @@ for l=1:clusterNum+1    % normalize
             occurrenceCount(:,:,l)/sum(sum(occurrenceCount(:,:,l)));
     end
 end
-%% tricky selection
+
+%% Tricky selection of parts
+
+% First select a body part
 bodyClusterIndex=0;
 minBodyClusterEnergy=Inf;
 for i=1:clusterNum
@@ -106,6 +121,7 @@ if bodyClusterIndex~=0
     clusterEnergy(bodyClusterIndex)=0;
 end
 
+% Remove overlapping parts
 for i=1:clusterNum
     for j=i+1:clusterNum
         maskI=occurrenceCount(:,:,i)>0.5*max(max(occurrenceCount(:,:,i)));
@@ -126,7 +142,9 @@ for i=1:clusterNum
     end
 end
 
-%%
+%% Compute probability (Final location model)
+
+% !! Here may require manual selection
 [~,sortedClusters]=sort(clusterEnergy,'ascend');
 maxClusters=sortedClusters(1:partsNum);
 occurrenceCount=occurrenceCount(:,:,[maxClusters;clusterNum+1]);
@@ -144,6 +162,8 @@ end
 [~,maxLabel]=max(locationProbMap,[],3);
 imagesc(maxLabel);
 
+
+%% Save result
 fprintf('Location model estimated for class: %d... ',classIndex);
 toc
 

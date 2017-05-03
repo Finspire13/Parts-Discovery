@@ -1,7 +1,7 @@
 function [ partsProposal,partsProposalMap,clusterResultMap ] = ...
     clusterSuperpixelsInFrame(flow,temporalSP,segments,frame,parameterSettings)
 %   Cluster superpixels in frame using hierarchical clustering with motion
-%   distance.
+%   distance. (Clusters of superpixels: Part proposals)
 %--Inupt--
 %   flow: Opticcal flow fields.
 %   temporalSP: Temporal superpixels maps.
@@ -10,9 +10,10 @@ function [ partsProposal,partsProposalMap,clusterResultMap ] = ...
 %   interval: Temporal interval size to find connected superpixels.
 %   partsNum: Number of parts to find.
 %--Output--
-%   partsProposal: Nx4 matrix of part proposals.
+%   partsProposal: Nx3 matrix of part proposals.
 %   partsProposalMap: Part proposals map.
-%%
+
+%% Get Settings
 
 quantizedSpace=parameterSettings.quantizedSpace;
 temporalInterval=parameterSettings.temporalInterval;
@@ -20,13 +21,15 @@ partsNum=parameterSettings.partsNum;
 foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
 partStrictness=parameterSettings.partStrictness;
 
-%%
+%% Cluster foreground superpixels
+
 foregroundMask=segments{frame};
-if sum(sum(foregroundMask))==0    %check for empty mask
+if sum(sum(foregroundMask))==0    % Check for empty mask
     partsProposal=[];
     partsProposalMap=[];
     clusterResultMap=zeros(size(temporalSP{frame}));
 else
+    % Get foreground superpixels
     foregroundMask=bwareafilt(foregroundMask,1);
     superpixels=unique(temporalSP{frame});
     foregroundSPMap=uint32(zeros(size(temporalSP{frame})));
@@ -41,7 +44,7 @@ else
     end
 
     foregroundSP=superpixels(superpixels~=0);
-    if length(foregroundSP)<=1
+    if length(foregroundSP)<=1      % No superpixels in foreground
         partsProposal=[];
         partsProposalMap=[];
         clusterResultMap=zeros(size(temporalSP{frame}));
@@ -51,7 +54,7 @@ else
                               flow,temporalInterval);
 
         distanceVector=pdist(foregroundSP,distfunHandler);
-        links=linkage(distanceVector,'single');   %!! why complete?
+        links=linkage(distanceVector,'single');   % 'Single' is better than 'complete'
         clusterResult=cluster(links,'maxclust',...
                               ceil(partsNum*partStrictness));
 
@@ -65,8 +68,6 @@ else
             extractPartsProposal(clusterResultMap,...
                                  foregroundMask,quantizedSpace);
     end
-    
-    
 
 end
 

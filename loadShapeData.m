@@ -1,8 +1,16 @@
 function [ shapeCuts, cutsMask ] = ...
     loadShapeData( fileSettings,segments,classIndex,sequenceIndex)
-%LOADSHAPEDATA Summary of this function goes here
-%   Detailed explanation goes here
-%%
+%   Load shape data and compute cuts masks.
+%--Input--
+%   fileSettings: ...
+%   segments: Foreground masks
+%   classIndex: For which class to load shape data
+%   sequenceIndex: For which sequence to load shape data
+%--Output--
+%   shapeCuts: Shape cuts loaded. Nx4 matrix.
+%   cutsMask: Cuts masks. 
+
+%% Load shape data
 
 shapeDataPath=fileSettings.shapeDataPath;
 

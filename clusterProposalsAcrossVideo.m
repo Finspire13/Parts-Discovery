@@ -1,7 +1,17 @@
 function [ proposalsAcrossVideo ] = ...
     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex)
-%CLUSTERPROPOSALSACROSSVIDEO Summary of this function goes here
-%   Detailed explanation goes here
+%   Cluster part proposals across videos of one class.
+%--Input--
+%   fileSettings: ...
+%   parameterSettings: ...
+%   classIndex: For which class to cluster part proposals
+%--Output--
+%   proposalsAcrossVideo: Saved to file and returned. Part proposals in each frame concatenated together
+%   clusterOfProposals: Saved to file. Clustering result of part proposals across video
+%   ppMapsAcrossVideo: Saved to file. Part proposal map in each frame concatenated together
+%   clusterResultMap: Saved to file. Visualization of part proposals in each frame
+
+%% Get Settings
 
 dataPath=fileSettings.dataPath;
 segmentsFile=fileSettings.segmentsFile;
@@ -20,7 +30,7 @@ partsRelaxation=parameterSettings.partsRelaxation;
 degeneratedClusterPenalty=parameterSettings.degeneratedClusterPenalty;
 degeneratedClusterCriteria=parameterSettings.degeneratedClusterCriteria;
 
-%%
+%% Get part proposals in all frames
 
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
@@ -41,7 +51,7 @@ for sequenceIndex=1:length(sequences)
     frames=dir([sequencePath strcat('/',frameType)]);
 
     for frameIndex=temporalInterval+1:length(frames)-temporalInterval-1
-        %framePath=fullfile(sequencePath,frames(frameIndex).name);
+        
         tic;
         [partsProposal,partsProposalMap,clusterResultMap]=...
             clusterSuperpixelsInFrame(flow,temporalSP,segments,...
@@ -71,10 +81,12 @@ save(outputPath,'proposalsAcrossVideo');
 outputPath=fullfile(proposalsPath,int2str(classIndex),proposalsMapFile);
 save(outputPath,'ppMapsAcrossVideo','-v7.3');
 
-%%
+%% Clustering of part proposals across videos
+
 tic;
 clusterNum=round(partsNum*partsRelaxation);
 
+% Run 1000 times and get the best result
 totalClusterEnergy=Inf;
 for kmeansIndex=1:1000
     
@@ -89,7 +101,7 @@ for kmeansIndex=1:1000
     end
 end
 
-%Normalize clusterEnergy
+%Normalize cluster energy
 for clusterIndex=1:length(clusterEnergy)
     clusterSize=numel(find(clusterResult==clusterIndex));
     clusterEnergy(clusterIndex)=clusterEnergy(clusterIndex)/clusterSize;

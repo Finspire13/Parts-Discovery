@@ -1,12 +1,16 @@
-%%
+%% File Settings
+
+% Dataset related
 fileSettings.dataPath = './data';
+fileSettings.shapeDataPath='./shapeData';
 fileSettings.frameType='*.jpg';     
 fileSettings.gtLabelsFile='gtLabels.mat';
-fileSettings.segmentsFile='segments_OSVOS.mat';
+fileSettings.segmentsFile='segments_OSVOS.mat';     % segments_OSVOS.mat or segments.mat
 fileSettings.superPixelsFile='superPixels.mat';
-fileSettings.temporalSuperPixelsFile='temporalSuperPixels.mat';
-fileSettings.opticalFlowFile='opticalFlow.mat';
+fileSettings.temporalSuperPixelsFile='temporalSuperPixels.mat';     
+fileSettings.opticalFlowFile='opticalFlow.mat';     % opticalFlow.mat or flow_flownet.mat
 
+% Output related
 fileSettings.proposalsFile='proposalsAcrossVideo.mat';
 fileSettings.proposalsMapFile='ppMapsAcrossVideo.mat';
 fileSettings.clusterOfProposalsFile='clusterOfProposals.mat';
@@ -19,12 +23,12 @@ fileSettings.visualizationFile='visualization.avi';
 fileSettings.locationModelPath='./output/locationModel';
 fileSettings.locationModelFile='locationProbMap.mat';
 
+% Util related
 fileSettings.optimizationSolverPath='./external/optimization/TRW-S/';
 fileSettings.fastSegUtilPath='./external/fromFastSeg';
 
-fileSettings.shapeDataPath='./shapeData';
 
-%%
+%% Parameter Settings
 
 parameterSettings.temporalInterval=2;
 parameterSettings.partsNum=10;
@@ -38,41 +42,31 @@ parameterSettings.partStrictness=0.7;
 
 parameterSettings.spatialWeight=0;
 parameterSettings.temporalWeight=1.2;
-parameterSettings.shapeWeight=-0.05;  %should be under zero
+parameterSettings.shapeWeight=-0.05;
 
-%%
+%% Compile Util Mex
 
-%compileFastSegUtil( fileSettings );
+compileFastSegUtil( fileSettings );
 
-%%
+%% Estimate Location Models
+
+for classIndex=1:4
+    
+    clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
+    
+    estimateLocationModel(fileSettings,parameterSettings,classIndex);
+    
+end
+
+%% Segmentation and Visulization
 for classIndex=1:4
     for sequenceIndex=1:8
-        videoSegmentParts2( fileSettings,parameterSettings,classIndex,sequenceIndex);
+        videoSegmentParts( fileSettings,parameterSettings,classIndex,sequenceIndex);
         visualizeSegments( fileSettings,parameterSettings,classIndex,sequenceIndex);
     end
 end
 
-%[ avgOverlapRatio, overlapRatio ] = evaluate( fileSettings,parameterSettings, 3, 4);
-
-
-% for classIndex=1:4
-%     
-%     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
-%     
-%     estimateLocationModel(fileSettings,parameterSettings,classIndex);
-%     
-% %     for sequenceIndex=1:8
-% %         
-% %         [ partsSegmentation ]=...
-% %         videoSegmentParts2(fileSettings,parameterSettings,...
-% %                           classIndex, sequenceIndex );
-% %                       
-% %         visualizeSegments( fileSettings,parameterSettings,...
-% %                            classIndex,sequenceIndex);
-% %     end     
-% end
-
-%%
+%% Evaluation
 % [ avgOverlapRatio, overlapRatio ] = ...
 %     evaluate( fileSettings,parameterSettings, classIndex, sequenceIndices);
 

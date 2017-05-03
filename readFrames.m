@@ -1,7 +1,12 @@
 function [ frameCells ] = ...
     readFrames( fileSettings,classIndex,sequenceIndices)
-%READFRAMES Summary of this function goes here
-%   Detailed explanation goes here
+%   Load RGB frames
+%--Input--
+%   fileSettings: ...
+%   classIndex: For which class to load frames
+%   sequenceIndices: For which sequences to load frames
+%--Output--
+%   frameCells: RGB frames
 
 dataPath=fileSettings.dataPath;
 frameType=fileSettings.frameType;

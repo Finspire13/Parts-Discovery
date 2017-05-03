@@ -1,8 +1,17 @@
 function [ partsSegmentation ] = ...
     videoSegmentParts_naive( fileSettings, parameterSettings, ...
                        classIndex,sequenceIndex)
-%VIDEOSEGMENTPARTS Summary of this function goes here
-%   Detailed explanation goes here
+%   Get parts segmentation using naive method
+%--Input--
+%   fileSettings: ...
+%   parameterSettings: ...
+%   classIndex: For which class to compute parts segmentation
+%   sequenceIndex: For which sequence to compute parts segmentation
+%--Output--
+%   partsSegmentation: Parts segmentation result. (Saved to file)
+
+%% Get Settings
+
 dataPath = fileSettings.dataPath;
 segmentsFile=fileSettings.segmentsFile;
 temporalSuperPixelsFile=fileSettings.temporalSuperPixelsFile;
@@ -13,7 +22,9 @@ locationModelFile=fileSettings.locationModelFile;
 
 partsNum=parameterSettings.partsNum;
 foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
-%%
+
+%% Load data
+
 tic;
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
@@ -28,12 +39,15 @@ load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
 locationModel=load(fullfile(locationModelPath,...
                 int2str(classIndex),locationModelFile),'locationProbMap');
 locationModel=locationModel.locationProbMap;
+
 %%
+
 for frame=1:length(temporalSP)
     temporalSP{frame}=temporalSP{frame}+partsNum+1;
 end
 
-%%
+%% Naive method
+
 partsSegmentation={};
 for frame=1:length(segments)
     

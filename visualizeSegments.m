@@ -1,15 +1,26 @@
 function [  ] =...
     visualizeSegments( fileSettings,parameterSettings,...
                        classIndex,sequenceIndex)
-%VISUALIZESEGMENTS Summary of this function goes here
-%   Detailed explanation goes here
+%   Visualize parts segmentation
+%--Input--
+%   fileSettings: ...
+%   parameterSettings: ...
+%   classIndex: For which class to visualize
+%   sequenceIndex: For which sequence to visualize
+%--Output--
+%   outputVideo: Visualization of parts segmentation. (Saved to file)
+
+%% Get Settings
+
 partsSegmentationFile=fileSettings.partsSegmentationFile;
 partsSegmentationPath=fileSettings.partsSegmentationPath;
 visualizationPath=fileSettings.visualizationPath;
 visualizationFile=fileSettings.visualizationFile;
 
 partsNum=parameterSettings.partsNum;
-%%
+
+%% Color Set
+
 colors=[255 0 0;
     101 255 0;
     0 255 101;
@@ -22,7 +33,10 @@ colors=[255 0 0;
     203 0 255;
     0 0 0;
     ];
-%%
+
+
+%% Visualize parts segmentation
+
 tic;
 load(fullfile(partsSegmentationPath,int2str(classIndex),...
               int2str(sequenceIndex),partsSegmentationFile),...

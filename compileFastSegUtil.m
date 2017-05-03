@@ -1,6 +1,11 @@
 function [ ] = compileFastSegUtil( fileSettings )
-%COMPILEFASTSEGUTIL Summary of this function goes here
-%   Detailed explanation goes here
+%   Compile utility code from 'FastSegmentation'
+%--Inupt--
+%   fileSettings: ...
+%--Output--
+%   Mex files
+
+%% Compile Util Mex
 
 fastSegUtilPath=fileSettings.fastSegUtilPath;
 homePath=pwd();
@@ -14,4 +19,3 @@ mex getTemporalConnections.cpp
 cd(homePath);
 
 end
-
