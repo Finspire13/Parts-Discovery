@@ -72,7 +72,7 @@ tic;
 
 %%
 
-[ uniqueSuperPixels, ~, ~, superpixelsNum ] = ...
+[ uniqueSuperPixels, superpixelFrameIDs, ~, superpixelsNum ] = ...
     makeSuperpixelIndexUnique( foregroundSuperPixels );
 
 unaryTerm=zeros(partsNum+1,superpixelsNum);
@@ -124,12 +124,19 @@ tic;
 %%
 
 imgs=readFrames( fileSettings,classIndex,sequenceIndex);
+[~,cutsMask]=loadShapeData(fileSettings,segments,classIndex,sequenceIndex);
+
+fprintf('Shape cuts data loaded... ');toc
+tic; 
+
+%%
 
 [ colours, centres, ~ ] = ...
     getSuperpixelStats( imgs, uniqueSuperPixels, superpixelsNum );
 
 pairPotentials = computePairwisePotentials( parameterSettings,...
-          uniqueSuperPixels,flow, colours, centres, superpixelsNum);
+          uniqueSuperPixels,flow, colours, centres, superpixelsNum,...
+          superpixelFrameIDs,cutsMask);
 pairPotentials.source=pairPotentials.source+1;
 pairPotentials.destination=pairPotentials.destination+1;
 

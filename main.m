@@ -2,7 +2,7 @@
 fileSettings.dataPath = './data';
 fileSettings.frameType='*.jpg';     
 fileSettings.gtLabelsFile='gtLabels.mat';
-fileSettings.segmentsFile='segments.mat';
+fileSettings.segmentsFile='segments_OSVOS.mat';
 fileSettings.superPixelsFile='superPixels.mat';
 fileSettings.temporalSuperPixelsFile='temporalSuperPixels.mat';
 fileSettings.opticalFlowFile='opticalFlow.mat';
@@ -19,12 +19,12 @@ fileSettings.visualizationFile='visualization.avi';
 fileSettings.locationModelPath='./output/locationModel';
 fileSettings.locationModelFile='locationProbMap.mat';
 
-fileSettings.opticalFlowPath='';
 fileSettings.optimizationSolverPath='./external/optimization/TRW-S/';
 fileSettings.fastSegUtilPath='./external/fromFastSeg';
 
-%parameterSettings.frameHeight=225;
-%parameterSettings.frameWidth=400;
+fileSettings.shapeDataPath='./shapeData';
+
+%%
 
 parameterSettings.temporalInterval=2;
 parameterSettings.partsNum=10;
@@ -38,9 +38,14 @@ parameterSettings.partStrictness=0.7;
 
 parameterSettings.spatialWeight=0;
 parameterSettings.temporalWeight=1.2;
+parameterSettings.shapeWeight=-0.05;  %should be under zero
 
 %%
-for classIndex=3:4
+
+%compileFastSegUtil( fileSettings );
+
+%%
+for classIndex=1:4
     for sequenceIndex=1:8
         videoSegmentParts2( fileSettings,parameterSettings,classIndex,sequenceIndex);
         visualizeSegments( fileSettings,parameterSettings,classIndex,sequenceIndex);
@@ -50,21 +55,21 @@ end
 %[ avgOverlapRatio, overlapRatio ] = evaluate( fileSettings,parameterSettings, 3, 4);
 
 
-% for classIndex=2:4
+% for classIndex=1:4
 %     
 %     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
 %     
 %     estimateLocationModel(fileSettings,parameterSettings,classIndex);
 %     
-%     for sequenceIndex=1:8
-%         
-%         [ partsSegmentation ]=...
-%         videoSegmentParts(fileSettings,parameterSettings,...
-%                           classIndex, sequenceIndex );
-%                       
-%         visualizeSegments( fileSettings,parameterSettings,...
-%                            classIndex,sequenceIndex);
-%     end     
+% %     for sequenceIndex=1:8
+% %         
+% %         [ partsSegmentation ]=...
+% %         videoSegmentParts2(fileSettings,parameterSettings,...
+% %                           classIndex, sequenceIndex );
+% %                       
+% %         visualizeSegments( fileSettings,parameterSettings,...
+% %                            classIndex,sequenceIndex);
+% %     end     
 % end
 
 %%

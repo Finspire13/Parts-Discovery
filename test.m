@@ -1,126 +1,159 @@
-dataPath = fileSettings.dataPath;
-segmentsFile=fileSettings.segmentsFile;
-superPixelsFile=fileSettings.superPixelsFile;
-partsSegmentationFile=fileSettings.partsSegmentationFile;
-partsSegmentationPath=fileSettings.partsSegmentationPath;
-locationModelPath=fileSettings.locationModelPath;
-locationModelFile=fileSettings.locationModelFile;
-opticalFlowFile=fileSettings.opticalFlowFile;
+% frames=readFrames(fileSettings,4,8);
+% for i=1:length(frames)
+%      imwrite(frames{i},sprintf('./tmp/tiger-right-8/%05d.jpg',i));
+% end
 
-optimizationSolverPath=fileSettings.optimizationSolverPath;
-fastSegUtilPath=fileSettings.fastSegUtilPath;
 
-partsNum=parameterSettings.partsNum;
+% 
+% frames=readFrames(fileSettings,4,6);
+% 
+% outputVideo=VideoWriter('./output/segments/46_new.avi');
+% open(outputVideo);
+% for i=1:length(segments)
+%     frames{i}(:,:,2) = min(255, frames{i}(:,:,2) + 100*uint8(segments{i}));
+%     writeVideo(outputVideo,frames{i});
+% end
+% close(outputVideo);
+% 
+% 
+% 
+% for i=1:21
+%     figure;imagesc(occurrenceCount(:,:,i));
+% end
 
-%%
 
-tic;
-classes=dir(dataPath);
-classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
-classPath=fullfile(dataPath, classes(classIndex).name);
+height=225+0.5;
+width=400+0.5;
 
-sequences=dir(classPath);
-sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
-sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
+upperLeftPoint=[0.5 0.5];
+upperRightPoint=[width 0.5];
+lowerLeftPoint=[0.5 height];
+lowerRightPoint=[width height];
 
-load(fullfile(sequencePath,superPixelsFile),'superPixels');
-load(fullfile(sequencePath,segmentsFile),'segments');
-load(fullfile(sequencePath,opticalFlowFile),'flow');
-% load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
-locationModel=load(fullfile(locationModelPath,...
-                int2str(classIndex),locationModelFile),'locationProbMap');
-locationModel=locationModel.locationProbMap;
+mask=zeros(height,width,2);
 
-addpath(optimizationSolverPath);
-addpath(fastSegUtilPath);
+%% y=0
 
-%%
+y=0.5;
 
-[ uniqueSuperPixels, ~, ~, superpixelsNum ] = ...
-    makeSuperpixelIndexUnique( superPixels );
-
-unaryTerm=zeros(partsNum+1,superpixelsNum);
-for frame=1:length(uniqueSuperPixels)
+if cut(4)-cut(2)==0
+    point1=[];
+else
+    k=(cut(3)-cut(1))/(cut(4)-cut(2));
+    x=k(y-cut(2))+cut(1);
     
-    SPs=unique(uniqueSuperPixels{frame});
-    
-    foregroundMask=segments{frame};
-    if nnz(foregroundMask)==0 
-        unaryTerm(1:partsNum,SPs)=1;
-        unaryTerm(partsNum+1,SPs)=0;
-        continue;
+    if x<0.5||x>width
+        point1=[];
+    else
+        point1=[x y];
     end
-    
-    prop=regionprops(foregroundMask);
-    foregroundBB=prop.BoundingBox;
-    foregroundBB=ceil(foregroundBB);
-    
-    bbX1=foregroundBB(1);
-    bbY1=foregroundBB(2);
-    bbX2=foregroundBB(1)+foregroundBB(3);
-    bbY2=foregroundBB(2)+foregroundBB(4);
-    bbX1=min(bbX1,size(foregroundMask,2));bbX1=max(bbX1,0);
-    bbX2=min(bbX2,size(foregroundMask,2));bbX2=max(bbX2,0);
-    bbY1=min(bbY1,size(foregroundMask,1));bbY1=max(bbY1,0);
-    bbY2=min(bbY2,size(foregroundMask,1));bbY2=max(bbY2,0);
+end
 
-    resizedLocationModel=...
-        imresize(locationModel,[bbY2-bbY1+1 bbX2-bbX1+1]);
-    extendedLocationModel=zeros([size(foregroundMask) partsNum+1]);
-    extendedLocationModel(:,:,partsNum+1)=1;
+%% y=h
 
-    extendedLocationModel(bbY1:bbY2,bbX1:bbX2,:)=resizedLocationModel;
+y=height;
+
+if cut(4)-cut(2)==0
+    point2=[];
+else
+    k=(cut(3)-cut(1))/(cut(4)-cut(2));
+    x=k(y-cut(2))+cut(1);
     
-    for sp=SPs'
-        spsMap=uniqueSuperPixels{frame};
-        spsMap=(spsMap==sp);
-        areaSize=bwarea(spsMap);
-        spProbs=extendedLocationModel.*repmat(double(spsMap),1,1,partsNum+1);
-        unaryTerm(:,sp)=reshape(sum(sum(spProbs))./areaSize,[partsNum+1 1]);
-        unaryTerm(:,sp)=1-unaryTerm(:,sp);
+    if x<0.5||x>width
+        point2=[];
+    else
+        point2=[x y];
     end
-    disp(frame);
+end
+
+
+%% x=0;
+
+x=0.5;
+
+if cut(3)-cut(1)==0
+    point3=[];
+else
+    k=(cut(4)-cut(2))/(cut(3)-cut(1));
+    y=k(x-cut(1))+cut(2);
+    
+    if y<0.5||y>height
+        point3=[];
+    else
+        point3=[x y];
+    end
+end
+
+
+%% x=w
+
+x=width;
+
+if cut(3)-cut(1)==0
+    point4=[];
+else
+    k=(cut(4)-cut(2))/(cut(3)-cut(1));
+    y=k(x-cut(1))+cut(2);
+    
+    if y<0.5||y>height
+        point4=[];
+    else
+        point4=[x y];
+    end
 end
 
 %%
 
-imgs=readFrames( fileSettings,classIndex,sequenceIndex);
+%% 
 
-[ colours, centres, ~ ] = ...
-    getSuperpixelStats( imgs, uniqueSuperPixels, superpixelsNum );
-
-pairPotentials = computePairwisePotentials( parameterSettings,...
-          uniqueSuperPixels,flow, colours, centres, superpixelsNum);
-
-
-edgeCoefficients=sparse(double(pairPotentials.source),...
-        double(pairPotentials.destination),double(pairPotentials.value),...
-        superpixelsNum,superpixelsNum);
-    
-labelDependencies=ones(partsNum+1,partsNum+1);
-labelDependencies=labelDependencies-diag(ones(1,partsNum+1));
-    
-fprintf('Energy function constructed... ');toc
-tic;   
-      
-[spLabels, ~]=mrfMinimizeMex(unaryTerm,edgeCoefficients,labelDependencies);
-
-%%
-
-partsSegmentation={};
-for frame=1:length(uniqueSuperPixels)
-    SPs=unique(uniqueSuperPixels{frame});
-    spsMap=uniqueSuperPixels{frame};
-    for sp=SPs'
-        spsMap(spsMap==sp)=spLabels(sp);
-    end
-    partsSegmentation{frame}=spsMap;
+%yy
+if isempty(point1)&&isempty(point2)
+    temp1=[upperLeftPoint;point3;point4;upperRightPoint;upperLeftPoint]';
+    temp2=[lowerLeftPoint;point3;point4;lowerRightPoint;lowerLeftPoint]';
+    mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
+    mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);
 end
 
-fprintf('Parts segmentation generated for sequence %d class %d... ',...
-        sequenceIndex,classIndex);
-toc
+%xx
+if isempty(point3)&&isempty(point4)
+    temp1=[upperLeftPoint;point1;point2;lowerLeftPoint;upperLeftPoint]';
+    temp2=[upperRightPoint;point1;point2;lowerRightPoint;upperRightPoint]';
+    mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
+    mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);    
+end
 
-outputPath=fullfile(partsSegmentationPath,int2str(classIndex),...
-                    int2str(sequenceIndex),partsSegmentationFile);
-save(outputPath,'partsSegmentation');
+%xy
+if isempty(point1)&&isempty(point3)
+    temp1=[upperLeftPoint;lowerLeftPoint;point2;point4;...
+           upperRightPoint;upperLeftPoint]';
+    temp2=[lowerRightPoint;point2;point4;lowerRightPoint]';
+    mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
+    mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);    
+end
+
+%xy
+if isempty(point1)&&isempty(point4)
+    temp1=[upperRightPoint;lowerRightPoint;point2;point3;...
+           upperLeftPoint;upperRightPoint]';
+    temp2=[lowerLeftPoint;point2;point3;lowerLeftPoint]';
+    mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
+    mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);     
+end
+
+%xy
+if isempty(point2)&&isempty(point3)
+    temp1=[lowerLeftPoint;upperLeftPoint;point1;point4;...
+           lowerRightPoint;lowerLeftPoint]';
+    temp2=[upperRightPoint;point1;point4;upperRightPoint]';
+    mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
+    mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);    
+end
+
+%xy
+if isempty(point2)&&isempty(point4)
+    temp1=[lowerRightPoint;upperRightPoint;point1;point3;...
+           lowerLeftPoint;lowerRightPoint]';
+    temp2=[upperLeftPoint;point1;point3;upperLeftPoint]';
+    mask(:,:,1)=poly2mask(temp1(1,:),temp1(2,:),height,width);
+    mask(:,:,2)=poly2mask(temp2(1,:),temp2(2,:),height,width);     
+end

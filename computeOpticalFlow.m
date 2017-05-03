@@ -1,12 +1,8 @@
 %% Set Paths and Parameters
 dataPath = './data';
-%classList= {'horseLeft','horseRight','tigerLeft','tigerRight'};
-frameType='*.jpg';
+frameType = '*.jpg'; 
 opticalFlowPath='./external/opticalFlow/brox2010';
-outputFile='opticalFlow.mat';                                                                                                                                                                                
-
-frameHeight=225;
-frameWidth=400;
+opticalFlowFile='opticalFlow.mat';               
 
 addpath(opticalFlowPath);
 
@@ -21,7 +17,6 @@ for classIndex=1:length(classes)
     for sequenceIndex=1:length(sequences)
         sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
         frames=dir([sequencePath strcat('/',frameType)]);
-        %frames=frames(~ismember({frames.name},{'.','..'}));
         
         flow=cell(1,length(frames)-1);
         for frameIndex=1:length(frames)-1
@@ -36,9 +31,10 @@ for classIndex=1:length(classes)
             flow{frameIndex}( :, :, 1 )=currentFlow( :, :, 2 );
             flow{frameIndex}( :, :, 2 )=currentFlow( :, :, 1 );
         end
-        outputPath=fullfile(sequencePath,outputFile);
+        outputPath=fullfile(sequencePath,opticalFlowFile);
         save(outputPath,'flow');
         
     end
     
 end
+

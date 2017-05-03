@@ -1,4 +1,7 @@
 data/*
 output/*
-external/*
+external/opticalFlow/*
+external/optimization/*
 Experiments/*
+shapeData/*
+tmp/*
