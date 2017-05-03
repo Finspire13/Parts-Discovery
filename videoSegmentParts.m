@@ -3,17 +3,24 @@ function [ partsSegmentation ] = ...
                        classIndex,sequenceIndex)
 %VIDEOSEGMENTPARTS Summary of this function goes here
 %   Detailed explanation goes here
+
 dataPath = fileSettings.dataPath;
 segmentsFile=fileSettings.segmentsFile;
-temporalSuperPixelsFile=fileSettings.temporalSuperPixelsFile;
+superPixelsFile=fileSettings.superPixelsFile;
 partsSegmentationFile=fileSettings.partsSegmentationFile;
 partsSegmentationPath=fileSettings.partsSegmentationPath;
 locationModelPath=fileSettings.locationModelPath;
 locationModelFile=fileSettings.locationModelFile;
+opticalFlowFile=fileSettings.opticalFlowFile;
+
+optimizationSolverPath=fileSettings.optimizationSolverPath;
+fastSegUtilPath=fileSettings.fastSegUtilPath;
 
 partsNum=parameterSettings.partsNum;
 foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
+
 %%
+
 tic;
 classes=dir(dataPath);
 classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
@@ -23,60 +30,67 @@ sequences=dir(classPath);
 sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
 sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
 
+load(fullfile(sequencePath,superPixelsFile),'superPixels');
 load(fullfile(sequencePath,segmentsFile),'segments');
-load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
+load(fullfile(sequencePath,opticalFlowFile),'flow');
+% load(fullfile(sequencePath,temporalSuperPixelsFile),'temporalSP');
 locationModel=load(fullfile(locationModelPath,...
                 int2str(classIndex),locationModelFile),'locationProbMap');
 locationModel=locationModel.locationProbMap;
-%%
-for frame=1:length(temporalSP)
-    temporalSP{frame}=temporalSP{frame}+partsNum+1;
-end
+
+addpath(optimizationSolverPath);
+addpath(fastSegUtilPath);
 
 %%
-partsSegmentation={};
-for frame=1:length(segments)
+foregroundSuperPixels=cell(length(superPixels),1);
+for frame=1:length(superPixels)
+    
+    foregroundSPIndex=2;
+    foregroundMask=segments{frame};
+    foregroundMask=bwareafilt(foregroundMask,1);
+    SPs=unique(superPixels{frame});
+    
+    temp=superPixels{frame};
+    
+    for sp=SPs'
+        spMap=superPixels{frame};
+        spMap(spMap~=sp)=0;
+        
+        if nnz(and(spMap,foregroundMask))>nnz(spMap)*foregroundSPCriteria
+            temp(superPixels{frame}==sp)=foregroundSPIndex;
+            foregroundSPIndex=foregroundSPIndex+1;
+        else
+            temp(superPixels{frame}==sp)=1;
+        end
+    end
+    
+    foregroundSuperPixels{frame}=temp;
+end
+
+fprintf('Foreground superpixels extracted... ');toc
+tic; 
+
+%%
+
+[ uniqueSuperPixels, superpixelFrameIDs, ~, superpixelsNum ] = ...
+    makeSuperpixelIndexUnique( foregroundSuperPixels );
+
+unaryTerm=zeros(partsNum+1,superpixelsNum);
+for frame=1:length(uniqueSuperPixels)
+    
+    SPs=unique(uniqueSuperPixels{frame});
     
     foregroundMask=segments{frame};
-    
     if nnz(foregroundMask)==0 
-        frameResult=ones(size(foregroundMask))*(partsNum+1);
-        partsSegmentation{frame}=frameResult;
+        unaryTerm(1:partsNum,SPs)=1;
+        unaryTerm(partsNum+1,SPs)=0;
         continue;
     end
     
     foregroundMask=bwareafilt(foregroundMask,1);
-
-    superpixels=unique(temporalSP{frame});
-    foregroundSPMap=uint32(zeros(size(temporalSP{frame})));
-    for spIndex=1:length(superpixels)
-        spMap=temporalSP{frame};
-        spMap(spMap~=superpixels(spIndex))=0;
-        if nnz(and(spMap,foregroundMask))>nnz(spMap)*foregroundSPCriteria
-            foregroundSPMap=foregroundSPMap+spMap;
-        else
-            superpixels(spIndex)=0;
-        end
-    end
-
-    foregroundSP=superpixels(superpixels~=0);
-    foregroundSP=foregroundSP';
-    
-    if isempty(foregroundSP)
-        frameResult=ones(size(foregroundMask))*(partsNum+1);
-        partsSegmentation{frame}=frameResult;
-        continue;
-    end
-
     prop=regionprops(foregroundMask);
     foregroundBB=prop.BoundingBox;
     foregroundBB=ceil(foregroundBB);
-
-    croppedForegroundSPMap=imcrop(foregroundSPMap,foregroundBB);
-    resizedLocationModel=...
-        imresize(locationModel,size(croppedForegroundSPMap));
-
-    frameResult=zeros(size(foregroundMask));
     
     bbX1=foregroundBB(1);
     bbY1=foregroundBB(2);
@@ -86,17 +100,68 @@ for frame=1:length(segments)
     bbX2=min(bbX2,size(foregroundMask,2));bbX2=max(bbX2,0);
     bbY1=min(bbY1,size(foregroundMask,1));bbY1=max(bbY1,0);
     bbY2=min(bbY2,size(foregroundMask,1));bbY2=max(bbY2,0);
-    frameResult(bbY1:bbY2,bbX1:bbX2)=double(croppedForegroundSPMap);
+
+    resizedLocationModel=...
+        imresize(locationModel,[bbY2-bbY1+1 bbX2-bbX1+1]);
+    extendedLocationModel=zeros([size(foregroundMask) partsNum+1]);
+    extendedLocationModel(:,:,partsNum+1)=1;
+
+    extendedLocationModel(bbY1:bbY2,bbX1:bbX2,:)=resizedLocationModel;
     
-    for sp=foregroundSP
-        spMap=croppedForegroundSPMap;
-        spMap=(spMap==sp);
-        spProbs=resizedLocationModel.*repmat(double(spMap),1,1,partsNum+1);
-        [~,maxLabel]=max(sum(sum(spProbs)));
-        frameResult(frameResult==sp)=maxLabel;
+    for sp=SPs'
+        spsMap=uniqueSuperPixels{frame};
+        spsMap=(spsMap==sp);
+        areaSize=bwarea(spsMap);
+        spProbs=extendedLocationModel.*repmat(double(spsMap),1,1,partsNum+1);
+        unaryTerm(:,sp)=reshape(sum(sum(spProbs))./areaSize,[partsNum+1 1]);
+        unaryTerm(:,sp)=1-unaryTerm(:,sp);
     end
-    frameResult(frameResult==0)=partsNum+1;
-    partsSegmentation{frame}=frameResult;
+end
+
+fprintf('Unary term computed... ');toc
+tic; 
+
+%%
+
+imgs=readFrames( fileSettings,classIndex,sequenceIndex);
+[~,cutsMask]=loadShapeData(fileSettings,segments,classIndex,sequenceIndex);
+
+fprintf('Shape cuts data loaded... ');toc
+tic; 
+
+%%
+
+[ colours, centres, ~ ] = ...
+    getSuperpixelStats( imgs, uniqueSuperPixels, superpixelsNum );
+
+pairPotentials = computePairwisePotentials( parameterSettings,...
+          uniqueSuperPixels,flow, colours, centres, superpixelsNum,...
+          superpixelFrameIDs,cutsMask);
+pairPotentials.source=pairPotentials.source+1;
+pairPotentials.destination=pairPotentials.destination+1;
+
+edgeCoefficients=sparse(double(pairPotentials.source),...
+        double(pairPotentials.destination),double(pairPotentials.value),...
+        superpixelsNum,superpixelsNum);
+    
+labelDependencies=ones(partsNum+1,partsNum+1);
+labelDependencies=labelDependencies-diag(ones(1,partsNum+1));
+    
+fprintf('Energy function constructed... ');toc
+tic;   
+      
+[spLabels, ~]=mrfMinimizeMex(unaryTerm,edgeCoefficients,labelDependencies);
+
+%%
+
+partsSegmentation=cell(length(uniqueSuperPixels),1);
+for frame=1:length(uniqueSuperPixels)
+    SPs=unique(uniqueSuperPixels{frame});
+    temp=uniqueSuperPixels{frame};
+    for sp=SPs'
+        temp(uniqueSuperPixels{frame}==sp)=spLabels(sp);
+    end
+    partsSegmentation{frame}=temp;
 end
 
 fprintf('Parts segmentation generated for sequence %d class %d... ',...
