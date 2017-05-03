@@ -1,7 +1,6 @@
 data/*
 output/*
 external/opticalFlow/*
-external/optimization/*
 Experiments/*
 shapeData/*
 tmp/*
