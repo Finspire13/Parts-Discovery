@@ -1,9 +1,0 @@
-3.13:
-crashed when taking all videos as input.
-Many warning: Some objects were not selected. In bwpropfilt In extractPartsProposal (line 12)
-
-Bug: Insufficient number of outputs from right hand side of equal sign to satisfy assignment.
-Error in getCommonCoordinate (line 6)
-boundingBox=prop.BoundingBox;
-at ./data/horseRight/4/175.jpg
-

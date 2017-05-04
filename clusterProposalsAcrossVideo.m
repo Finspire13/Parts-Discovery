@@ -33,11 +33,11 @@ degeneratedClusterCriteria=parameterSettings.degeneratedClusterCriteria;
 %% Get part proposals in all frames
 
 classes=dir(dataPath);
-classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
+classes=classes(~ismember({classes.name},{'.','..','.gitignore'}));      % Remove . and ..
 classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
-sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
+sequences=sequences(~ismember({sequences.name},{'.','..','.gitignore'}));     % Remove . and ..
 
 proposalsAcrossVideo=[];
 ppMapsAcrossVideo=[];

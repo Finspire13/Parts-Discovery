@@ -40,7 +40,7 @@ parameterSettings.softMaskFactor=2;
 parameterSettings.foregroundSPCriteria=0.3;
 parameterSettings.partStrictness=0.7;
 
-parameterSettings.spatialWeight=0;
+parameterSettings.spatialWeight=0.1;
 parameterSettings.temporalWeight=1.2;
 parameterSettings.shapeWeight=-0.05;
 
@@ -50,13 +50,13 @@ compileFastSegUtil( fileSettings );
 
 %% Estimate Location Models
 
-for classIndex=1:4
-    
-    clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
-    
-    estimateLocationModel(fileSettings,parameterSettings,classIndex);
-    
-end
+% for classIndex=1:4
+%     
+%     clusterProposalsAcrossVideo(fileSettings,parameterSettings,classIndex);
+%     
+%     estimateLocationModel(fileSettings,parameterSettings,classIndex);
+%     
+% end
 
 %% Segmentation and Visulization
 for classIndex=1:4

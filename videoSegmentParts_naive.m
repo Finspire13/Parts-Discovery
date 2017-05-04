@@ -27,11 +27,11 @@ foregroundSPCriteria=parameterSettings.foregroundSPCriteria;
 
 tic;
 classes=dir(dataPath);
-classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
+classes=classes(~ismember({classes.name},{'.','..','.gitignore'}));      % Remove . and ..
 classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
-sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
+sequences=sequences(~ismember({sequences.name},{'.','..','.gitignore'}));     % Remove . and ..
 sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
 
 load(fullfile(sequencePath,segmentsFile),'segments');

@@ -12,11 +12,11 @@ dataPath=fileSettings.dataPath;
 frameType=fileSettings.frameType;
 %%
 classes=dir(dataPath);
-classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
+classes=classes(~ismember({classes.name},{'.','..','.gitignore'}));      % Remove . and ..
 classPath=fullfile(dataPath, classes(classIndex).name);
 
 sequences=dir(classPath);
-sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
+sequences=sequences(~ismember({sequences.name},{'.','..','.gitignore'}));     % Remove . and ..
 
 if nargin==2
     sequenceIndices=1:length(sequences);

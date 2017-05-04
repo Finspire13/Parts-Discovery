@@ -3,11 +3,11 @@
 addpath('./external/opticalFlowUtil');
 
 classes=dir('./data');
-classes=classes(~ismember({classes.name},{'.','..'}));      % Remove . and ..
+classes=classes(~ismember({classes.name},{'.','..','.gitignore'}));      % Remove . and ..
 for classIndex=1:length(classes)
     classPath=fullfile('./data' , classes(classIndex).name);
     sequences=dir(classPath);
-    sequences=sequences(~ismember({sequences.name},{'.','..'}));     % Remove . and ..
+    sequences=sequences(~ismember({sequences.name},{'.','..','.gitignore'}));     % Remove . and ..
     
     for sequenceIndex=1:length(sequences)
         sequencePath=fullfile(classPath,sequences(sequenceIndex).name);
